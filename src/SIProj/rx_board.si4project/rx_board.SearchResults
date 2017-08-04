@@ -1,0 +1,6 @@
+---- AVL6381TunerLockSignal Matches (5 in 4 files) ----
+Avl6381Manager.c (D:\Workspace\Xilinx2015_Workspace\rx_board\src\Tuner\DVBC\AVL6381) line 253 :   Function:     AVL6381TunerLockSignal
+AVL6381TunerLockSignal in Avl6381Manager.c (D:\Workspace\Xilinx2015_Workspace\rx_board\src\Tuner\DVBC\AVL6381) :     LogPrint("[AVL6381TunerLockSignal]: MxL608_Initialize Status:%d ePortIndex:%d\r\n",g_Tuner_608[ePortIndex].enumLockStatus,ePortIndex);
+Avl6381Manager.h (D:\Workspace\Xilinx2015_Workspace\rx_board\src\Tuner\DVBC\AVL6381) line 44 : int  AVL6381TunerLockSignal(Avl6381_PortIndex_t ePortIndex, Avl6381_SearchParams_t *pSearchParams);
+Tuner_c_lockSignal in tuner_c.c (D:\Workspace\Xilinx2015_Workspace\rx_board\src\Tuner\DVBC) :             ret = AVL6381TunerLockSignal(u8PortIndex, &stAvl6381LockPara);
+Tuner_dtmb_lockSignal in tuner_dtmb.c (D:\Workspace\Xilinx2015_Workspace\rx_board\src\Tuner\DTMB) :             ret = AVL6381TunerLockSignal(u8PortIndex, &stAvl6381LockPara);
