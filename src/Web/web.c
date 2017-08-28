@@ -153,6 +153,7 @@ wvWebErrCode web_Start(void)
     pthread_attr_t thread_attr;
     pthread_t web_thread;
 
+	printf("######## web start\n");
     
     res = pthread_attr_init(&thread_attr);
     if(0 != res)

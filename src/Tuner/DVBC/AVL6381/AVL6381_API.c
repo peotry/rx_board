@@ -311,8 +311,6 @@ AVL6381_ErrorCode AVL6381_I2CBypassOn(Avl6381_PortIndex_t ePortIndex)
         BIT_REPEATER_WAIT_ACK|BIT_REPEATER_SEL|BIT_REPEATER_ENABLE);
     r = I2C_Write32_6381(ePortIndex, gsAVL6381Chip[ePortIndex].m_SlaveAddr, hw_AVL6381_tuner_hw_i2c_bit_rpt_cntrl,
         BIT_REPEATER_WAIT_ACK|BIT_REPEATER_SEL|BIT_REPEATER_ENABLE);
-
-    usleep(2000000);
     return r;
 }
 

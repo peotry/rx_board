@@ -4128,7 +4128,11 @@ wvErrCode TSP_GetDestIndex(U8 u8Slot, U8 aru8DestSlot[], U8 *pu8DestIndex)
             __FUNCTION__, __LINE__, aru8DestSlot, pu8DestIndex);
         return WV_ERR_TSP_INPUT_PARAM;
     }
-    
+
+	//FIXME
+	//写死destlot
+	aru8DestSlot[u8Slot] = u8Slot;
+	
     for (i = 0; i < MAX_DEST; i++)
     {
         if (u8Slot == aru8DestSlot[i])
@@ -7186,16 +7190,29 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         return WV_ERR_TSP_INPUT_PARAM;
     }
 
+	//设置输出LUT
+    enErrCode = TSP_SetInputLUT(pstParamTS);
+    if (WV_SUCCESS != enErrCode)
+    {
+        log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
+            "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
+            __FUNCTION__, __LINE__, enErrCode);
+    }
+
+	return WV_SUCCESS;
+
     stUnsetProgList.u16IndexListNum = 0;
     stSetProgList.u16IndexListNum = 0;
     stOldCAMIndexList.u16IndexListNum = 0;
 
+	//记录解扰信息
     for (i = 0; i < u16DescrambleProgNum; i++)
     {
         u16Channel = arstDescrambleProgInfoList[i].u16Channel;
         u16ServiceID = arstDescrambleProgInfoList[i].u16ServiceID;
         u8CAMIndex = arstDescrambleProgInfoList[i].u8CAMIndex;
 
+		//通过节目的通道号，获取节目属于哪一个流
         enErrCode = TSP_GetInputTSIndex(u16Channel, pstParamTS, &u16InTSIndex);
         if (WV_SUCCESS != enErrCode)
         {
@@ -7205,6 +7222,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             return enErrCode;
         }
 
+		//通过ts index 和server id 获取program index
         enErrCode = TSP_GetInputProgIndex(u16InTSIndex, u16ServiceID, pstParamTS, &u16InProgIndex);
         if (WV_SUCCESS != enErrCode)
         {
@@ -7214,31 +7232,38 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             return enErrCode;
         }
 
+		//通过节目的CAM index 获取该节目原来是否是解扰的
         u8OldCAMIndex = pstParamTS->pInputProgram[u16InProgIndex].u8CAMIndex;
 
-        if (u8OldCAMIndex < WVCI_MAX_SLOT_NUM)//ԭ���Ѿ����ù�����
+		//原来节目是解扰的
+        if (u8OldCAMIndex < WVCI_MAX_SLOT_NUM)
         {
-            if (u8CAMIndex < WVCI_MAX_SLOT_NUM)//���ڻ���Ҫ���ý���
+			//现在还是节目还是解扰
+            if (u8CAMIndex < WVCI_MAX_SLOT_NUM)
             {
-                if (u8CAMIndex != u8OldCAMIndex)//����һ��CAM����
+				//节目解扰的CAM卡变化了
+                if (u8CAMIndex != u8OldCAMIndex)
                 {
+					//记录解除原来设置、重新设置
                     stUnsetProgList.aru16IndexList[stUnsetProgList.u16IndexListNum++] = u16InProgIndex;
                     stOldCAMIndexList.aru16IndexList[stOldCAMIndexList.u16IndexListNum++] = u8OldCAMIndex;
 
                     stSetProgList.aru16IndexList[stSetProgList.u16IndexListNum++] = u16InProgIndex;
                 }
             }
-            else//ȡ������
-            {
+            else
+            {	//解除节目解扰
                 stUnsetProgList.aru16IndexList[stUnsetProgList.u16IndexListNum++] = u16InProgIndex;
                 stOldCAMIndexList.aru16IndexList[stOldCAMIndexList.u16IndexListNum++] = u8OldCAMIndex;
 
                 u8CAMIndex = INVALID_CAM_INDEX;
             }
         }
-        else//ԭ��û���ý���
+		//原来节目不解扰
+        else
         {
-            if (u8CAMIndex < WVCI_MAX_SLOT_NUM)//����Ҫ���ý���
+			//现在节目解扰
+            if (u8CAMIndex < WVCI_MAX_SLOT_NUM)
             {
                 stSetProgList.aru16IndexList[stSetProgList.u16IndexListNum++] = u16InProgIndex;
             }
@@ -7251,7 +7276,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         pstParamTS->pInputProgram[u16InProgIndex].u8CAMIndex = u8CAMIndex;
     }
 
-    //��CI���������ɾ��Ҫȡ�����ŵĽ�Ŀ
+    //解除原有设置
     for (i = 0; i < stUnsetProgList.u16IndexListNum; i++)
     {
         u16InProgIndex = stUnsetProgList.aru16IndexList[i];
@@ -7290,6 +7315,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         }
     }
 
+
     enErrCode = TSP_SendDescrambledProg2OutputBoard(FALSE, &stUnsetProgList, pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7299,7 +7325,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         return (int)enErrCode;
     }
 
-    //��CI�����������Ҫ���ý��ŵĽ�Ŀ
+    //重新设置解扰
     for (i = 0; i < stSetProgList.u16IndexListNum; i++)
     {
         u16InProgIndex = stSetProgList.aru16IndexList[i];
@@ -7363,6 +7389,8 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         return (int)enErrCode;
     }
 
+
+	//构建CI表
     enErrCode = TSP_ConstructSITableOfCIOutput(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7372,6 +7400,8 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         return (int)enErrCode;
     }
 
+
+	//这是干嘛的, 
     enErrCode = TSP_SetCIOutputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7380,6 +7410,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             __FUNCTION__, __LINE__);
     }
 
+	//这是干嘛
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7388,6 +7419,8 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             __FUNCTION__, __LINE__, enErrCode);
     }
 
+
+	//设置输出LUT
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7396,7 +7429,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             __FUNCTION__, __LINE__, enErrCode);
     }
 
-    (void)WVCI_UpdateSetting(ALL_SLOTS);
+    //(void)WVCI_UpdateSetting(ALL_SLOTS);
 
     enErrCode = TSP_StoreTSConfiguration();
     if (WV_SUCCESS != enErrCode)
@@ -7647,11 +7680,28 @@ wvErrCode TSP_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry 
     }
 
     *pu16EntryNum = 0;
+	//TODO
+	//just test
+	{
+		PIDINFO stPIDInfo;
+		//获取stream id
+		u16StreamID = TSP_CICamIndex2StreamID(u8DestSlot);
+		//获取某个输出通道的所有PID
+		TSP_GetAllPIDInChannel(u8DestSlot, 0, &stPIDInfo);
+		int index = 0;
+		for(index = 0; index < stPIDInfo.u16PIDNum; ++index)
+		{
+			arstLUTEntry[index].u16SrcStream = u16StreamID;
+			arstLUTEntry[index].u16SrcPID =stPIDInfo.aru16PIDList[index];
+		}
+		*pu16EntryNum = stPIDInfo.u16PIDNum;
+	}
     
     for (u8CamIndex = 0; u8CamIndex < WVCI_MAX_SLOT_NUM; u8CamIndex++)
     {
         if (WV_SUCCESS != TSP_GetOutputTSIndex(u8CamIndex, pstParamTS, &u16OutTSIndex))
         {
+			printf("No Output Ts...\n");
             continue;
         }
 
@@ -7668,6 +7718,8 @@ wvErrCode TSP_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry 
             return enErrCode;
         }
 
+		printf("stIndexList.u16IndexListNum = %u\n", stIndexList.u16IndexListNum);
+
         for (i = 0; i < stIndexList.u16IndexListNum; i++)
         {
             u16Index = stIndexList.aru16IndexList[i];
@@ -7675,21 +7727,25 @@ wvErrCode TSP_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry 
             u16SrcProgIndex = pstParamTS->pOutputProgram[u16Index].u16ProgramID;
             u16SrcTSIndex = pstParamTS->pInputProgram[u16SrcProgIndex].u16TSIndex;
 
+			//输入节目和输入流的输出地址匹配
             if ((!TSP_IfInputProgOutputs2DestSlot(u16SrcProgIndex, pstParamTS, u8DestSlot))
                 && (!TSP_IfInputTSOutputs2DestSlot(u16SrcTSIndex, pstParamTS, u8DestSlot)))
             {
                 continue;
             }
 
+			//节目的PCR PID
             stTempEntry.u16SrcStream = u16StreamID;
             stTempEntry.u16SrcPID = pstParamTS->pOutputProgram[u16Index].u16PCRPID;
 
+			//Entry 是否已经存在
             if (!TSP_IsInputLUTEntryAlreadyExist(&stTempEntry, arstLUTEntry, u16EntryNum)
                 && (u16EntryNum < MAX_INPUT_LUT_ENTRY_NUM))
             {
                 memcpy(&arstLUTEntry[u16EntryNum++], &stTempEntry, sizeof(INPUTLutEntry));
             }
 
+			//获取ES PID
             stESIndexList.u16IndexListNum = 0;
             enErrCode = TSP_GetOutProgESPIDIndexList(u16Index, pstParamTS, &stESIndexList);
             if (WV_SUCCESS != enErrCode) 
@@ -7981,20 +8037,25 @@ wvErrCode TSP_SetInputLUT(TSInfo *pstParamTS)
     {
         u8DestSlot = s_aru8DestSlotRecord[u8LUTIndex];
 
-        if (TSP_IsLegalSlot(u8DestSlot))
+		u8DestSlot = u8LUTIndex;
+	
+        //if (TSP_IsLegalSlot(u8DestSlot))
+        
+        if(1 == 1)
         {
             u32IPAddr = Resource_getBoardIPAddress(u8DestSlot);
             Resource_getMACAddress(u8DestSlot, aru8MAC);
+			u32IPAddr = 0xE30A145A + u8LUTIndex;
             u16UDPPort = s_u16UDPPort;
 
             if ((0xA0 != aru8MAC[0]) || (0x69 != aru8MAC[1]) || (0x86 != aru8MAC[2]))
             {
-                aru8MAC[0] = 0xA0;
-                aru8MAC[1] = 0x69;
-                aru8MAC[2] = 0x86;
-                aru8MAC[3] = 0xFF;
-                aru8MAC[4] = 0xFF;
-                aru8MAC[5] = u8DestSlot;
+                aru8MAC[0] = 0x00;
+                aru8MAC[1] = 0x0a;
+                aru8MAC[2] = 0x35;
+                aru8MAC[3] = 0x00;
+                aru8MAC[4] = 0x01;
+                aru8MAC[5] = 0x22 + u8LUTIndex;
             }
 
             log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP, 
@@ -8010,7 +8071,8 @@ wvErrCode TSP_SetInputLUT(TSInfo *pstParamTS)
             u16UDPPort = 0;
             memset(aru8MAC, 0, sizeof(aru8MAC));
         }
-        
+
+		//设置输出IP MAC 和端口
         enErrCode = TSP_SetInputLUTIPInfo(u8LUTIndex, u32IPAddr, u16UDPPort, aru8MAC);
         if (WV_SUCCESS != enErrCode) 
         {
@@ -8021,9 +8083,11 @@ wvErrCode TSP_SetInputLUT(TSInfo *pstParamTS)
             return enErrCode;
         }
 
-        if (!TSP_IsLegalSlot(u8DestSlot))
+        //if (!TSP_IsLegalSlot(u8DestSlot))
+        //FIXME
+        if(1 == 0)
         {
-            //��ո�����Ϣ
+            //clear LUT
             for (i = 0; i < MAX_INPUT_LUT_ENTRY_NUM; i++)
             {
                 FPGA_REG_Write(LUT_ADDR, (u8LUTIndex << 12) | i);
@@ -8092,6 +8156,8 @@ wvErrCode TSP_SetInputLUT(TSInfo *pstParamTS)
 
     return WV_SUCCESS;
 }
+
+
 
 void TSP_ClearAllBypassAndMUXFlag(U8 u8LUTIndex)
 {
@@ -8490,7 +8556,7 @@ wvErrCode TSP_RestoreDestSlotRecord(U8 *pu8DestSlot)
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
-wvErrCode TSP_RestoreTSMUXInfo(void)
+wvErrCode  TSP_RestoreTSMUXInfo(void)
 {
     wvErrCode enErrCode = WV_SUCCESS;
     U16 u16InTSIndex = 0;

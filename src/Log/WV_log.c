@@ -56,6 +56,7 @@ char log_NameArrayName[][MAX_MODULE_NAME_LEN] = {
     "TUNER",
     "PARAM",
     "DRIVERS",
+    "XML",
     /* 结束标志 */
 };
 

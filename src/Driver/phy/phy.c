@@ -142,7 +142,7 @@ BOOL PHY_SetEth(EthType_enum emEthType)
     Status  = XEmacPs_PhyRead(emEthType, 0, 20, &PhyReg0);
     LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_DRIVERS, "**** read Eth%d PhyReg0 0x%x\r\n",emEthType, PhyReg0);
     
-    PhyReg0 |= 0x3a;
+    PhyReg0 |= 0x7a;
     Status = XEmacPs_PhyWrite(emEthType, 0, 20, PhyReg0);
     LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_DRIVERS, "**** write Eth%d PhyReg0 0x%x\r\n",emEthType, PhyReg0);
 

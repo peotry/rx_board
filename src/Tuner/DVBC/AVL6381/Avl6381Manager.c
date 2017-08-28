@@ -106,6 +106,33 @@ static AVL6381_Para global_demod_config =
 };
 
 
+/* 旧的接收板，demod 用tuner环出的16M晶振，DTMB模式下不正常，
+*间歇性失锁,新硬件版本demod使用独立的30M晶振，跟IRD一样
+*/
+static AVL6381_Para global_demod_config_HW0_16M =
+{
+    .sStartupMode = TUNER_608_MODE,
+    
+#ifdef TUNER_608
+    .sInputConfig = {
+            .ueRefConfig = AVL6381_Xtal_16M,   //clock setting
+            .ueDTMBInputPath = ADC_IF_I,
+            .ueDVBCInputPath = ADC_IF_I,
+            .uiDTMBIFFreqHz = 5*1000*1000,
+            .uiDVBCIFFreqHz = 5*1000*1000,
+            .uiDTMBSymbolRateHz = 7560*1000,
+            .uiDVBCSymbolRateHz =6875*1000
+         },
+#endif    
+
+    .sMPEGConfig = {
+         .enumSerialParallel = AVL6381_MPEG_SERIAL,// parallel TS or serial TS config
+         .enumRisingFalling = AVL6381_MPEG_RISING,// falling edge or rising edge TS sampling config
+         .enumConti= AVL6381_MPEG_CONTINUOUS_DISABLE,//enable or disable continuous MPEG clock
+    }
+};
+
+
 /*****************************************************************************
   Function:     PrintVersion
   Description:  print demod version
@@ -240,7 +267,6 @@ int  AVL6381TunerInit(Avl6381_PortIndex_t ePortIndex, unsigned char ucMode)
 #ifdef TUNER_608
     g_Tuner_608[ePortIndex].m_ucDTVMode = ucMode; // Set mode c or dtmb.
     ret = MxL608_Initialize(ePortIndex, &g_Tuner_608[ePortIndex]);
-	Tuner_dtmb_lockSignal(ePortIndex);
     LogPrint("[AVL6381TunerInit] MxL608_Initialize return ret:%d !!\r\n",ret);
 #endif
 
@@ -315,7 +341,7 @@ int  AVL6381TunerLockSignal(Avl6381_PortIndex_t ePortIndex, Avl6381_SearchParams
            dtmbSymbolRate = DTMB_SYMBOL_RATE_8M;
        } 
        
-       DTMB_SetSymbolRate_6381(dtmbSymbolRate * 1000, ePortIndex);
+       //DTMB_SetSymbolRate_6381(dtmbSymbolRate * 1000, ePortIndex);
     }
 
     /*auto lock*/
@@ -604,8 +630,6 @@ BOOL AVL6381TunerGetLockStatus(Avl6381_PortIndex_t ePortIndex)
         AVL6381_IBSP_Delay(10); //Wait 10ms for demod to lock the channel.
     }while(--u8TryTimes);
 
-    LogPrint("***************port %d, r= %d, demod lock status %d\r\n"
-                , ePortIndex,r, demod_lock_status);
     
     return (1 == demod_lock_status) ? TRUE : FALSE;
 }

@@ -2220,28 +2220,27 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
     U8 u8Slot = 0;
     TSInfo *pstParamTS = NULL;
     IndexInfoList arstDescrambledProgIndexList[WVCI_MAX_SLOT_NUM];
-    U16 u16OutTSIndex = INDEX_INVALID_VALUE;
+    U16 u16InTSIndex = INDEX_INVALID_VALUE;
     U16 u16ProgIndex = INDEX_INVALID_VALUE;
     U8 u8Mode = 0;
 
     pstParamTS = TSP_GetTSParamHandle();
 
-    s_CITaskMuxFlag = 0x01;     // disable check slot 
-
+	//è·å–æ‰€æœ‰çš„CIè§£æ‰°çš„ä¿¡æ¯
     for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
     {
         arstDescrambledProgIndexList[u8Slot].u16IndexListNum = 0;
-        if (WV_SUCCESS != TSP_GetOutputTSIndex(u8Slot, pstParamTS, &u16OutTSIndex))
+        if (WV_SUCCESS != TSP_GetInputTSIndex(u8Slot, pstParamTS, &u16InTSIndex))
         {
             continue;
         }
 
-        enErrCode = TSP_GetOutTSProgIndexList(u16OutTSIndex, pstParamTS, &arstDescrambledProgIndexList[u8Slot]);
+        enErrCode = TSP_GetInTSProgIndexList(u16InTSIndex, pstParamTS, &arstDescrambledProgIndexList[u8Slot]);
         if (WV_SUCCESS != enErrCode)
         {
             log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
                "[%s:%d]TSP_GetOutTSProgIndexList Error:enErrCode[%X],u8Slot[%u],u16OutTSIndex[%u]\r\n",
-               __FUNCTION__, __LINE__, enErrCode, u8Slot, u16OutTSIndex);
+               __FUNCTION__, __LINE__, enErrCode, u8Slot, u16InTSIndex);
             return (int)enErrCode;
         }
     }
@@ -2254,27 +2253,31 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
         }
         else
         {
-            WVCI_SetTSBypassass2CAM(u8Slot, TSP_CICamIndex2StreamID(u8Slot));
+            WVCI_SetTSBypassass2CAM(u8Slot, TSP_InputChannel2StreamID(u8Slot));
             WVCI_SetTSBypass2CAMFlag(u8Slot);
         }
     }
 
     for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
     {
-        //TODO
-        //Ê²Ã´ÒâË¼
+		/*
         if (((CI_SLOT0 == u8Slot) && (emSlotMode == ONLY_SLOT_1))
             || ((CI_SLOT1 == u8Slot) && (emSlotMode == ONLY_SLOT_0)))
         {
             continue;
         }
+        */
+        if(u8Slot != emSlotMode)
+        {
+			continue;
+        }
 
-        if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// Í£Ö¹½âÈÅ
+        if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// 
         {
             WVCI_GenerateCAPMT(u8Slot,
                                 s_u16LastDescrProgIndex[u8Slot],
                                 pstParamTS,
-                                CA_PMT_LIST_MANAGEMENT_WELLAV_DESCRAMBLE); //WELLAVÔö¼Ó²âÊÔÓÃ£¬²»·ûºÏen50221±ê×¼
+                                CA_PMT_LIST_MANAGEMENT_WELLAV_DESCRAMBLE); 
             continue;
         }
         else if (1 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// ONLY one CAPMT
@@ -2306,8 +2309,6 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
             WVCI_GenerateCAPMT(u8Slot, u16ProgIndex, pstParamTS, u8Mode);
         }
     }
-    
-    s_CITaskMuxFlag = 0x00;     // enable check slot    
     
     return WVCI_SUCCESS;
 }
@@ -2457,8 +2458,10 @@ void WVCI_TEST(void)
 	    }
 
 	    //WVCI_SetTSToCAM(CI_SLOT0, 0);
-	    
+
+		//TODO
 	    WVCI_SetCAPMT(i, u8testCAPMT, 38);
+	    WVCI_UpdateSetting(i);
 	}
     
     

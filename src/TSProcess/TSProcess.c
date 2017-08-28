@@ -300,7 +300,7 @@ wvErrCode TSP_GetAllPIDInChannel(U16 u16Channel, U8 u8TSScannerIndex, PIDINFO *p
     FPGA_REG_Write(PID_EXIST_FLAG_CLEAR_EN_0 + u8TSScannerIndex, 1);
     FPGA_REG_Write(PID_EXIST_FLAG_CLEAR_EN_0 + u8TSScannerIndex, 0);
 
-    //等待足够长时间????
+    //等待足够长时间
     sleep(1);//后面改成时间可调
 
     //读取PID存在位
@@ -1688,6 +1688,7 @@ wvErrCode TSP_ParseSI(U16 u16Channel, U8 u8Standard, U8 u8TSScannerIndex, U16 u1
         "[%s:%d]Start ParseSI,u8TSScannerIndex[%u],u16InTSIndex[%u]\r\n",
         __FUNCTION__, __LINE__, u8TSScannerIndex, u16InTSIndex);
 
+	//获取通道的所有PID
     stPIDInfo.u16PIDNum = 0;
     enErrCode = TSP_GetAllPIDInChannel(u16Channel, u8TSScannerIndex, &stPIDInfo);
     if (WV_SUCCESS != enErrCode)
@@ -1714,6 +1715,7 @@ wvErrCode TSP_ParseSI(U16 u16Channel, U8 u8Standard, U8 u8TSScannerIndex, U16 u1
         stPIDInfo.u16PIDNum--;
     }
 
+	//解析PAT
     if (PAT_PID != stPIDInfo.aru16PIDList[0])
     {
         log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP, "[%s:%d]No PAT\r\n", __FUNCTION__, __LINE__);
@@ -1726,7 +1728,7 @@ wvErrCode TSP_ParseSI(U16 u16Channel, U8 u8Standard, U8 u8TSScannerIndex, U16 u1
         for (i = 0; i < stPIDInfo.u16PIDNum; i++)
         {
             u16PID = stPIDInfo.aru16PIDList[i] & 0x1FFF;
-
+			//将所有的PID设置为Others PID
             enErrCode = TSP_SetInputOtherPIDInfo(u16InTSIndex, u16PID, pstParamTS);
             if (WV_SUCCESS != enErrCode)
             {
@@ -3043,6 +3045,7 @@ void *TSP_ScanTSRoutine(void *pArg)
             continue;
         }
 
+		//清除Tuner锁定发生变化的标志
         Tuner_ClearLockFreqChangeFlag(u8Channel);
         TSP_SetClearTSFlag(u8Channel, FALSE);
     }

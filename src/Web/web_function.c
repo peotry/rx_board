@@ -1108,3 +1108,20 @@ BOOL web_IsProgSet2BeDescrambled(U16 u16InProgIndex, TSInfo *pstParamTS)
     return TSP_IsProgSet2BeDescrambled(u16InProgIndex, pstParamTS);
 }
 
+
+
+
+
+wvErrCode web_XmlDescramble(DescrambleProgInfo arstDescrambleProgInfo[], U16 u16DescrambleProgNum, TSInfo *pstParamTS)
+{
+	wvErrCode ret = WV_SUCCESS;
+
+	//相关CI解扰代码
+
+
+	//设置LUT
+	LUT_SetInputLUT(pstParamTS);
+
+	return ret;
+}
+

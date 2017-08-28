@@ -43,6 +43,10 @@ static LOCK_enum b_LastLockStatuts[DTV4U_TUNER_CHAN_NUM] = {UNLOCK, UNLOCK, UNLO
 /* tuner type */
 static TUNER_TYPE_enum u32TunerType = TUENR_TYPE_UNKNOW;
 
+/* tuner select type, dtmb or dvbc , default is dvbc */
+static TUNER_TYPE_enum u32TunerSelectType = TUNER_C; 
+
+
 static char * strTunerType[] =
 {
     "DVBC",
@@ -54,6 +58,92 @@ static char * strTunerType[] =
 TUNER_TYPE_enum Tuner_GetTunerType()
 {
     return u32TunerType;
+}
+
+
+void Tuner_SetTunerSelectType(TUNER_TYPE_enum tunerType)
+{
+    // DVBC or DTMB
+    if( (tunerType == TUNER_DTMB) || (tunerType == TUNER_C) )
+    {
+        u32TunerType = tunerType;
+        u32TunerSelectType = tunerType;
+        Tuner_StoreParam();
+    }
+
+}
+
+
+TUNER_TYPE_enum Tuner_GetSelectTunerType(void)
+{
+    // DVBC or DTMB
+    return u32TunerSelectType;
+}
+
+/*****************************************************************************
+  Function:     Tuner_StoreParam
+  Description:  Tuner_StoreParam
+  Input:        none
+  Output:       none
+  Return:       none
+  Author:       huada.huang
+*****************************************************************************/
+S32 Tuner_StoreParam(void)
+{
+    wvErrCode enErrCode = WV_SUCCESS;
+
+    enErrCode = PARAM_WriteFile(FILE_NAME_TUNER_TYPE_CONFIG, (U8 *)&u32TunerSelectType, sizeof(U32));
+    if (WV_SUCCESS != enErrCode)
+    {
+        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP,
+            "[%s:%d]PARAM_WriteFile error,enErrCode[%08X]\r\n",
+            __FUNCTION__, __LINE__, enErrCode);
+    }
+
+    return WV_SUCCESS;
+}
+
+/*****************************************************************************
+  Function:     Tuner_RestoreParam
+  Description:  Tuner_RestoreParam
+  Input:        none
+  Output:       none
+  Return:       none
+  Author:       huada.huang
+*****************************************************************************/
+S32 Tuner_RestoreParam(void)
+{
+    wvErrCode enErrCode = WV_SUCCESS;
+    U8 u8TryTimes = 0;
+    
+    do
+    {
+        enErrCode = PARAM_ReadFile(FILE_NAME_TUNER_TYPE_CONFIG, (U8 *)&u32TunerSelectType, sizeof(U32));
+        if (WV_SUCCESS == enErrCode) 
+        { 
+            break;
+        }
+
+        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TUNER,
+            "[%s:%d]PARAM_ReadFile error,u8TryTimes[%u],enErrCode[%08X]\r\n",
+            __FUNCTION__, __LINE__, u8TryTimes, enErrCode);
+
+        usleep(100000);
+        
+        u8TryTimes++;
+        
+    }while (u8TryTimes < 2);
+
+    if (WV_SUCCESS != enErrCode)
+    {
+        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TUNER,
+            "[%s:%d]Get tuner configuration error, set to default\r\n",
+            __FUNCTION__, __LINE__, u8TryTimes, enErrCode);
+    
+    }
+
+    
+    return WV_SUCCESS;
 }
 
 /*****************************************************************************
@@ -190,21 +280,22 @@ TUNER_TYPE_enum Tuner_checkType(void)
 {
     /*¼ì²âtunerÀàÐÍ*/
     U32 u32Type = 0x0;
-    
-    LicenseInfo_t *pstLicenseInfo = BMN_GetLicenseInfo_Handle();
+    Tuner_RestoreParam();
     
     u32Type = FPGA_GetTunerType();
     switch(u32Type)
     {
         case TUNER_BOARD_C_OR_DTMB:
         {  
-            if( pstLicenseInfo->SubboardID == CMP_RECEIVER_DTMB )
+            // D?¦Ì?¨®2?t¡ã?¡À?¡ê?avl6381?¡ì??30M2??¡ì3?DTMB?¡ê¨º?
+            if( u32TunerSelectType == TUNER_DTMB && (PIN_GetHWVerSion() >= 0x1))
             {
                 u32TunerType = TUNER_DTMB;
             }
             else
             {
-                u32TunerType = TUNER_C;   
+                u32TunerType = TUNER_C;
+                u32TunerSelectType = TUNER_C;
             }
 
             break;
@@ -256,27 +347,28 @@ U32 Tuner_reset(U8 u8PortIndex)
 *****************************************************************************/
 U32 Tuner_initial(U8 u8PortIndex)
 {   
+    U32 ret;
+
     if(u8PortIndex >= DTV4U_TUNER_CHAN_NUM)
     {
         return WV_ERR_PARAMS;
     }
 
-	u32TunerType = TUNER_DTMB;
     switch(u32TunerType)
     {  
         case TUNER_C:
         {
-            Tuner_c_initial(u8PortIndex);
+            ret = Tuner_c_initial(u8PortIndex);
             break;
         }
         case TUNER_S2:
         {
-            Tuner_s2_initial(u8PortIndex);
+            ret = Tuner_s2_initial(u8PortIndex);
             break;
         }
         case TUNER_DTMB:
         {
-            Tuner_dtmb_initial(u8PortIndex);
+            ret = Tuner_dtmb_initial(u8PortIndex);
             break;
         }
         default:
@@ -285,7 +377,7 @@ U32 Tuner_initial(U8 u8PortIndex)
         }
     }
     
-    return 0;
+    return ret;
 }
 
 
@@ -461,6 +553,7 @@ BOOL Tuner_isChannelLock(U8 u8PortIndex)
 void Tuner_init()
 {
     U8 u8TunerIdx = 0;
+    U32 u32Ret = 0;
     
     for(u8TunerIdx = 0; u8TunerIdx < DTV4U_TUNER_CHAN_NUM; u8TunerIdx++)
     {
@@ -470,7 +563,7 @@ void Tuner_init()
 
     for(u8TunerIdx = 0; u8TunerIdx < DTV4U_TUNER_CHAN_NUM; u8TunerIdx++)
     {
-        Tuner_initial(u8TunerIdx);
+        u32Ret = Tuner_initial(u8TunerIdx);
     }
 
     Tuner_ParamInit();
@@ -510,6 +603,8 @@ U32 Tuner_process(void)
                 
                 if(b_LastLockStatuts[u8TunerIdx] != b_LockStatuts[u8TunerIdx])
                 {
+					//TODO
+					Tuner_SetLockFreqChangeFlag(u8TunerIdx);
                     b_LastLockStatuts[u8TunerIdx] = b_LockStatuts[u8TunerIdx];
                     LOG_PRINTF(LOG_LEVEL_ALL, LOG_MODULE_TUNER, "tuner port %d lock\r\n", u8TunerIdx);
                 }

@@ -43,8 +43,10 @@
 #include "GPIO.h"
 #include "psconf/data_hex_array.h"
 #include "psconf/psconf.h"
+#include "web_xml.h"
 
 #include "upgrade.h"
+#include "lut.h"
 
 extern void UartComm_RequestIP(U8 u8SlotID);
 extern void UartComm_RecvData(U8 u8slot, ST_WV_UARTCOMM  * pstUartComm);
@@ -75,80 +77,45 @@ U32 OS_ThreadCreate(pthread_t *thread,void *(* thread_function)(void *))
 
 int main()
 {
-    /*????????*/
+	printf("main func...\n");
+    //初始化日志
     log_Init((U8 *)LOG_SAVE_FILE, LOG_SAVE_SIZE);
 
-    /*???????????????д???????phyо?*/
+    //初始化
     (void)i2c_OpenBus(I2C_0);
     (void)i2c_OpenBus(I2C_1);
     FPGA_Init();
     UartComm_init();
+
+	printf("PHY_Init func...\n");
     PHY_Init();
 
     //软件 加载 XC6SLX4芯片，将逻辑提供的bit文件转换为16进制的数组，加载到芯片上
-    PSConf_FWConfigGeneralFPGA32Bit(data_array, sizeof(data_array) -1, XILINX_PLATFORM);
+    PSConf_FWConfigGeneralFPGA32Bit(psconf_data_array, sizeof(psconf_data_array) -1, XILINX_PLATFORM);
 
-
-    /*???????????λ???? */
     Status_Init();
 
-    /*???licens????????mac,????????*/
-    //BMN_GetBoardLicense();
-    //BMN_ParseBoardLicense();
-
-    //TODO
-    //IP_setMac();
-
-    /*???????????*/
+	//初始化xml信息
+	WebXml_InitDeviceInfo();
+	WebXml_InitParamsInfo();
+	WebXml_InitProgramDecrypt();
+   
     Resource_Init(Status_GetSlotID());
 
-	//探测ADT7410是否存在
-	#if 0
-	ADT7410_Detect();
-	U32 temp = 0;
+	//网络通信
+	web_Start();
 
-	while(1)
-	{
-		if(WV_TEMP_NEGATIVE == ADT7410_GetTemperature(&temp))
-		{
-			printf("Temp: - %u\n", temp);
-		}
-		else
-		{
-			printf("Temp: %u\n", temp);
-		}
-			
-		sleep(1);
-	}
-	#endif
-
-    /*UART ??????????????ip???????????????ip*/
-    //UartComm_GetTime();
-    //UartComm_GetIpAddr(Status_GetSlotID());
-
-    /*??Χо?????,TUNER??FPGA??CI*/
+	//定时检测温度，定时上报
+	//定时发表
+	SIP_Init();
+    
+    TSP_Init();
+	  
     WVCI_Setup();
 
     usleep(4000*1000);
 
     Tuner_init();
-
-    SIP_Init();
-
-    //????????
-    TSP_Init();
-
-    /*???? web ???*/
-    //web_Start();
-
-    //??????
-    //NMGServer_Start();
-
-    /*????ip??????*/
-    //IPServer_Start();
-
-    /*????????????????*/
-    //IPComm_SendData2Slot(SLOT_BB, IPCOMM_SEND_RESOUR, (U8*)Resource_getSelfHandle(), sizeof(TResource_TS));
 
     pthread_t stCIMonitorThread;
     (void)OS_ThreadCreate(&stCIMonitorThread, (void *)WVCI_TaskMonitoring);
@@ -159,24 +126,41 @@ int main()
     pthread_t stTunerThread;
     (void)OS_ThreadCreate(&stTunerThread, (void *)Tuner_process);
 
+	//复用输出
     TSP_RestoreTSMUXInfo();
-
-    //???????????SI???????
+	
     SIP_SendSIServer();
     
     TSP_ScanTSStart();
 
+	DescrambleProgInfo arstDescrambleProgInfo[100];
+	arstDescrambleProgInfo[0].u16Channel = 0;
+	arstDescrambleProgInfo[0].u16ServiceID = 302;
+	arstDescrambleProgInfo[0].u8CAMIndex = INVALID_CAM_INDEX;
+
+	TSInfo * pstTS = TSP_GetTSParamHandle();
+	
+	usleep(20000*1000);
+	int index = 0;
+
+	usleep(20000*1000);
+	
+	//web_ProcessDescramble(arstDescrambleProgInfo , 1, pstTS);
+	
+	LUT_SetInputLUT(pstTS);
     while(1)
     {
-        usleep(30000*1000);
 		WVCI_TEST();
-		//WVCI_TEST(0);
-		//WVCI_TEST(1);
-		//WVCI_TEST(2);
-		//WVCI_TEST(3);
-    }
+        usleep(30000*1000);
+		//TSInfo * pstTS = TSP_GetTSParamHandle();
+		//WelXml_GetProgramInfoFromTSInfo(pstTS);
 
+		//web_ProcessDescramble(arstDescrambleProgInfo , 1, pstTS);
+		//WVCI_TEST();
+
+    }
     return 0;
+	
 }
 
 

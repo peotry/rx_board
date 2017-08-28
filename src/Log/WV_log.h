@@ -63,6 +63,8 @@ typedef enum{
     LOG_MODULE_TUNER        = (0x1 << 20),
     LOG_MODULE_PARAM        = (0x1 << 21),
     LOG_MODULE_DRIVERS      = (0x1 << 22),
+    LOG_MODULE_XML          = (0x1 << 23),
+    
     //取反，方便控制位关掉该寄存器
     LOG_MODULE_SYS_F          = ~(0x1 << 6),
     LOG_MODULE_INIT_F         = ~(0x1 << 7),
@@ -81,6 +83,7 @@ typedef enum{
     LOG_MODULE_TUNER_F        = ~(0x1 << 20),
     LOG_MODULE_PARAM_F        = ~(0x1 << 21),
     LOG_MODULE_DRIVERS_F      = ~(0x1 << 22),
+    LOG_MODULE_XML_F          = ~(0x1 << 23),
 }LogMoudles;
 
 void log_Init(U8 * pu8LogSavepath, U32 u32LogSavesize);

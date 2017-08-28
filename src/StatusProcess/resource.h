@@ -29,37 +29,35 @@ typedef struct
 
 typedef struct
 {
-    U32     u32Version;                 //½á¹¹Ìå°æ±¾ºÅ
+    U32     u32Version;                 //è½¯ä»¶ç‰ˆæœ¬å·
 
     //user info
     U32 u8UserNum;
     TUserInfo User[MAX_USER_NUM];
 
-    //ÓÉ×Ó°å°å¸üĞÂÒÔÏÂĞÅÏ¢
     U8      u8SlotID;
     U8      u8BoardType;                                                                                                            //ÊäÈë×Ó°å/Êä³ö×Ó°å/¹¦ÄÜ×Ó°å/±³°å
-    U8      u8MACAddress[6];            //±³°å»ò×Ó°åµÄMACµØÖ·£¬Î¨Ò»±êÊ¶·û
+    U8      u8MACAddress[6];            //macåœ°å€
     U32     u32SoftVersion;
     U32     u32LogicVersion;
     U32     u32HardVersion;
-    U32     u32IPAddress;               //±³°å»ò×Ó°åµÄIPµØÖ·
-    U8      u8BoardDescriptor[20];      //×Ö·û´®ÃèÊö×Ó°åÃû³Æ£¬ÈçQAM/Encode
+    U32     u32IPAddress;               //ipåœ°å€
+    U8      u8BoardDescriptor[20];      //æ¿æè¿°å­—æ®µ
 
-    //ÓÉ±³°å¸üĞÂÒÔÏÂĞÅÏ¢
     U8      u8ChangeStatus;
     U8      u8OldBoardType;                                                                                                         //ÊäÈë×Ó°å/Êä³ö×Ó°å/¹¦ÄÜ×Ó°å/±³°å
-    U8      u8OldMACAddress[6];         //±³°å»ò×Ó°åµÄMACµØÖ·£¬Î¨Ò»±êÊ¶·û
+    U8      u8OldMACAddress[6];         
     U32     u32OldSoftVersion;
     U32     u32OldLogicVersion;
     U32     u32OldHardVersion;
-    U32     u32OldIPAddress;            //±³°å»ò×Ó°åµÄIPµØÖ·
+    U32     u32OldIPAddress;           
 
     U8      u8PortNum;                                                                                                                //Ó²¼ş¶Ë¿ÚÊıÁ¿
     U8      u8Mac0LicFlag;
     U8      u8Res0[2];                                                                                                                   //Ó²¼ş¶Ë¿ÚÊıÁ¿
-    U16     u16InputChannelNum;         //ÊäÈëÍ¨µÀÊıÁ¿
-    U16     u16OutputChannelNum;        //Êä³öÍ¨µÀÊıÁ¿
-    U8      u8OutputChannelStatus[256]; //Êä³öÍ¨µÀ×´Ì¬  Ê¹ÄÜ/±»Õ¼ÓÃµÈ
+    U16     u16InputChannelNum;         
+    U16     u16OutputChannelNum;       
+    U8      u8OutputChannelStatus[256]; 
 
     U8      u8Res1[420];
 }TResource_TS;   //sizeof(TResource_TS) = 1K

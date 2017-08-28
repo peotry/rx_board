@@ -8,6 +8,8 @@
 
 #include "base.h"
 
+#include "gb2312_to_utf8.h"
+
 S8 * g_ps8RevData = NULL;
 extern bool g_IsLicExpired;
 
@@ -85,7 +87,13 @@ wvErrCode web_ProcessData(buffer * pstWriteBuff,server *pstSrv, connection *pstW
     int           nRevLen     = 0;
     chunk       * pTemp       = pstWebConn->request_content_queue->first;
     int           nHadRevlen  = WEB_POST_DATA_LEN;
+	char          utf8_Buf[WEB_POST_DATA_LEN * 2] = {0};
+	char          gb2312_buf[WEB_POST_DATA_LEN * 2] = {0};
+	int str_len = 0;
 
+
+	printf("Get Web Data....\n");
+	
     
     g_ps8RevData = (S8 *)malloc(WEB_POST_DATA_LEN);
     if (NULL == g_ps8RevData)
@@ -111,52 +119,33 @@ wvErrCode web_ProcessData(buffer * pstWriteBuff,server *pstSrv, connection *pstW
         //将post过来的数据存储起来
         memcpy((char *)(g_ps8RevData + nRevLen),pTemp->mem->ptr, strlen(pTemp->mem->ptr));
 
+		//打印数据
+		printf("%s\n", pTemp->mem->ptr);
+
         nRevLen += strlen(pTemp->mem->ptr);
         
         pTemp = pTemp->next;
     }
 
-    //WEB_LOG("=======================================");
-    //WEB_LOG("%s",g_ars8RevData);
-    //WEB_LOG("=======================================");
-    
-    
-    for (i = 0; NULL != arstWEBComm[i].pcStr; i++)
-    {
-        p = arstWEBComm[i].pcStr;
+	/*
+	int fd = open("/tmp/GetDeviceInfo.xml", O_RDWR| O_CREAT, 0666);
+	write(fd, g_ps8RevData, nRevLen);
+	FILE * fp = fdopen(fd, "rw");
+	fflush(fp);
+	fsync(fd);
+	close;
 
-        //判断是否是当前请求
-        if (NULL == strstr((const char *)pstWebConn->request.request->ptr, p))
-        {
-            continue;
-        }
-        
-        if(NULL != arstWEBComm[i].pAuthorization && false == arstWEBComm[i].pAuthorization())
-        {
-            eRetCode = WV_ERR_LIC_EXPIRED;
-            freeRevData();
-            return web_processErr( pstWriteBuff , eRetCode, p );
-        }
-        
-        if (NULL != arstWEBComm[i].pfProcess)
-        {
-           
-            //调用函数
-            eRetCode = arstWEBComm[i].pfProcess( pstWriteBuff );
-            //错误处理
-            if (WV_SUCCESS != eRetCode)
-            {
-                freeRevData();
-                return web_processErr( pstWriteBuff , eRetCode, p );
-            }
-        }
+	WebXml_ParseFile("/tmp/GetDeviceInfo.xml", pstWriteBuff);
+	*/
 
-        freeRevData();
-        return eRetCode;
-    }
+
+	//XML 接口文档
+	
+	//WebXml_ParseMem(utf8_Buf, str_len, pstWriteBuff);
+	WebXml_ParseMem(g_ps8RevData, nRevLen, pstWriteBuff);
 
     freeRevData();
-    return eRetCode;
+    return WV_SUCCESS;
 }
 
 /****************************************************************************

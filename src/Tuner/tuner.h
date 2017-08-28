@@ -18,6 +18,7 @@
 
 #define DTV4U_TUNER_CHAN_NUM AVL6381_PORT_NUM
 
+#define FILE_NAME_TUNER_TYPE_CONFIG "/wellav_data/tuner_type.config"
 #define FILE_NAME_TUNER_C_CONFIG "/wellav_data/tuner_c.config"
 #define FILE_NAME_TUNER_S2_CONFIG "/wellav_data/tuner_s2.config"
 #define FILE_NAME_TUNER_DTMB_CONFIG "/wellav_data/tuner_dtmb.config"
@@ -59,6 +60,13 @@ typedef enum
 
 U32 Tuner_getStatus(U8 u8PortIndex, Tuner_SrcStatus_t *pstTunerStatus);
 TUNER_TYPE_enum Tuner_GetTunerType();
+
+void Tuner_SetTunerSelectType(TUNER_TYPE_enum tunerType);
+TUNER_TYPE_enum Tuner_GetSelectTunerType(void);
+
+S32 Tuner_StoreParam(void);
+S32 Tuner_RestoreParam(void);
+
 void Tuner_init();
 U32 Tuner_Default(void);
 BOOL Tuner_IslockParamChange(U8 u8PortIndex);

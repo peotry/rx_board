@@ -297,10 +297,12 @@ BOOL Tuner_dtmb_IsLockParamChange(U8 ePortIndex)
 {
     BOOL b_lockPramChange = FALSE;
     
-    if( stDTMBOldParams[ePortIndex].u32FrequencyKHz != stDTMBParams[ePortIndex].u32FrequencyKHz )
+    if( (stDTMBOldParams[ePortIndex].u32FrequencyKHz != stDTMBParams[ePortIndex].u32FrequencyKHz)
+    || (stDTMBOldParams[ePortIndex].u32QamMode != stDTMBParams[ePortIndex].u32QamMode) )
     {
         b_lockPramChange = TRUE;
         stDTMBOldParams[ePortIndex].u32FrequencyKHz = stDTMBParams[ePortIndex].u32FrequencyKHz;
+        stDTMBOldParams[ePortIndex].u32QamMode = stDTMBParams[ePortIndex].u32QamMode;
     }
 
     return b_lockPramChange;     

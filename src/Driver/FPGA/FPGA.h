@@ -258,6 +258,11 @@
                                                                      //[1]：对应输入查找表1
                                                                      //[2]：对应输入查找表2
                                                                      //[3]：对应输入查找表3
+#define PID_BYPASS             0x346
+
+
+//Buf 溢出监控
+
 
 //Output Lookup Table for CI MUX
 #define OUTPUT_LUT_SWAP               0x400   // R/W      1       0x0 :0-1-0切换，所有entry更新完后才切换
