@@ -138,20 +138,20 @@ int main()
 	arstDescrambleProgInfo[0].u16ServiceID = 302;
 	arstDescrambleProgInfo[0].u8CAMIndex = INVALID_CAM_INDEX;
 
-	TSInfo * pstTS = TSP_GetTSParamHandle();
+	///TSInfo * pstTS = TSP_GetTSParamHandle();
 	
-	usleep(20000*1000);
-	int index = 0;
+	//usleep(20000*1000);
+	//int index = 0;
 
-	usleep(20000*1000);
+	//usleep(20000*1000);
 	
 	//web_ProcessDescramble(arstDescrambleProgInfo , 1, pstTS);
-	
-	LUT_SetInputLUT(pstTS);
+	//TSInfo * pstTS = TSP_GetTSParamHandle();
+	//LUT_SetInputLUT(pstTS);
     while(1)
     {
 		WVCI_TEST();
-        usleep(30000*1000);
+        usleep(60000*1000);
 		//TSInfo * pstTS = TSP_GetTSParamHandle();
 		//WelXml_GetProgramInfoFromTSInfo(pstTS);
 

@@ -1492,7 +1492,7 @@ int WVCI_PES_Checking(void)
 BOOL WVCI_IsCASysIdInList(U8 u8Slot, WORD wCASysId)
 {
     int i;
-    if(u8Slot > 1)
+    if(u8Slot > MAX_CI_SLOTS)
     {
         return FALSE;
     }
@@ -1931,7 +1931,7 @@ BOOL WVCI_IsPlayingServiceInDescrambled(U8 u8Slot)
             WVCI_FAILURE                        ≤Ÿ◊˜ ß∞‹
  * 
  ******************************************************************************/
-int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eMode)
+int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16InProgIndex, TSInfo *pstParamTS, U8 eMode)
 {
     int  nRet = 0;
     U8   CAPMTBuf[MAX_LEN_CA_PMT];
@@ -1954,28 +1954,18 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
     U16 u16ESDescLen = 0;
     U8 *pu8ESDesc = NULL;
 
-    Output_TSProgram *pOutputProg = NULL;
-    Output_TSPID *pOutputPID = NULL;
+    Input_TSProgram *pInputProg = NULL;
+    Input_TSPID *pInputPID = NULL;
     IndexInfoList stIndexList;
 
-    if ((!pstParamTS) || (pstParamTS->u32OutputProgramNumber <= u16OutProgIndex))
+    if ((!pstParamTS) || (pstParamTS->u32InputProgramNumber <= u16InProgIndex))
     {
-        CI_LOG_ERR("[WVCI_GenerateCAPMT]Input Error,pstParamTS[%p],u16OutProgIndex[%u]\r\n", pstParamTS, u16OutProgIndex);
+        CI_LOG_ERR("[WVCI_GenerateCAPMT]Input Error,pstParamTS[%p],u16InProgIndex[%u]\r\n", pstParamTS, u16InProgIndex);
         return WVCI_ERROR_PARAMS;
     }
 
-    #if 0
-    // ºÏ≤ÈCAM «∑Ò≥ı ºªØ≥…π¶
-    if (0 == WVCI_IsModuleInited(u8Slot))
-    {
-        CI_LOG_ERR("[WVCI_GenerateCAPMT] Slot%d no inited, skip generate pmts...\r\n", u8Slot);
-        return WVCI_SUCCESS;
-    }
-    #endif
+    pInputProg = &pstParamTS->pInputProgram[u16InProgIndex];
 
-    pOutputProg = &pstParamTS->pOutputProgram[u16OutProgIndex];
-
-    // ≥ı ºªØ
     memset(CAPMTBuf, 0x00, sizeof(CAPMTBuf));
 
     CAPMTBuf[0] = 0x9F;
@@ -1993,24 +1983,24 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
     // stop descramble
     else
     {
-        // ÷∏∂®Œ™ΩˆΩˆΩ‚»≈“ª∏ˆΩ⁄ƒø£¨Õ¨ ±∫Û√ÊµƒES ECM√Ë ˆŒ™“ª∏ˆ”ÎΩ⁄ƒøŒﬁπÿµƒPID
-        // ∑Ò‘Ú»Áπ˚ π”√CA_PMT_CMD_ID_NOT_SELECTED≤Œ ˝£¨≤ø∑÷CAMªπ «≤ªƒ‹¬˙◊„Õ£÷πΩ‚»≈
         CAPMTBuf[nTotalLen++] = CA_PMT_LIST_MANAGEMENT_ONLY;
     }
 
     // program number
-    CAPMTBuf[nTotalLen++] = (pOutputProg->u16ServiceID >> 8) & 0xFF;
-    CAPMTBuf[nTotalLen++] = pOutputProg->u16ServiceID & 0xFF;
+    CAPMTBuf[nTotalLen++] = (pInputProg->u16ServiceID >> 8) & 0xFF;
+    CAPMTBuf[nTotalLen++] = pInputProg->u16ServiceID & 0xFF;
 
-    //  π”√À—À˜Ω⁄ƒø ±º«¬ºµƒPMT Version
-    CAPMTBuf[nTotalLen++] = pOutputProg->u8PMTVersionNumber;
+    //PMT Version
+	//TODO
+	//CAPMTBuf[nTotalLen++] = pInputProg->u8PMTVersionNumber;
+	CAPMTBuf[nTotalLen++] = 0;
     nLoopSizePtr = nTotalLen;
     
     CAPMTBuf[nTotalLen++] = 0;  // size comes here
     CAPMTBuf[nTotalLen++] = 0;  // size comes here
 
-    pBuf = pOutputProg->aru8ProgramInfo;
-    nProgInfoLen = pOutputProg->u16ProgramInfoLength;
+    pBuf = pInputProg->aru8ProgramInfo;
+    nProgInfoLen = pInputProg->u16ProgramInfoLength;
     nLoopLen = 0;
     i = 0;
     
@@ -2051,16 +2041,16 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
     nLoopLen = 0;
 
     stIndexList.u16IndexListNum = 0;
-    (void)TSP_GetOutProgESPIDIndexList(u16OutProgIndex, pstParamTS, &stIndexList);
+    (void)TSP_GetInProgESPIDIndexList(u16InProgIndex, pstParamTS, &stIndexList);
 
     for (i = 0; i < stIndexList.u16IndexListNum; i++)
     {
-        pOutputPID = &pstParamTS->pOutputPID[stIndexList.aru16IndexList[i]];
-        u16ESPID = pOutputPID->u16PID;
+        pInputPID = &pstParamTS->pInputPID[stIndexList.aru16IndexList[i]];
+        u16ESPID = pInputPID->u16PID;
         
-        u8ESStreamType = pOutputPID->u8StreamType;
-        u16ESDescLen = pOutputPID->u16ESInfoLength;
-        pu8ESDesc = pOutputPID->aru8ESInfo;
+        u8ESStreamType = pInputPID->u8StreamType;
+        u16ESDescLen = pInputPID->u16ESInfoLength;
+        pu8ESDesc = pInputPID->aru8ESInfo;
 
         if (!WVCI_IsStreamTypeInList(u8ESStreamType))
         {
@@ -2080,7 +2070,6 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
             CAPMTBuf[nTotalLen+2] = (BYTE)(u16ESPID&0xFF);
 
         }
-        // Õ£÷πΩ‚»≈
         else
         {
             u16ESPID = 0x1FF5; //8181 ::°°if the last ES's ECM pid is 0x1FF5, it can not stop ES descramble... 
@@ -2157,7 +2146,6 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
         nTotalLen+=2;
     }   
 
-    // CAPMT≥§∂»≤ªÃ´ø…ƒ‹¥Û”⁄1020
     if (nTotalLen < (MAX_LEN_CA_PMT - 4))
     {
         CAPMTBuf[nTotalLen+0] = 0x47;
@@ -2170,13 +2158,27 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16OutProgIndex, TSInfo *pstParamTS, U8 eM
     nRet = CI_SendCAPMT2CAM(u8Slot, CAPMTBuf, nTotalLen);
     
     // recoder the last capmt offset
-    s_u16LastDescrProgIndex[u8Slot] = u16OutProgIndex;
+    s_u16LastDescrProgIndex[u8Slot] = u16InProgIndex;
     CI_LOG_INF("[WVCI_GenerateCAPMT] Slot%d,u16OutProgIndex:%02d,eMode:%02d setting...(%d)\r\n", 
                                             u8Slot, 
-                                            u16OutProgIndex, 
+                                            u16InProgIndex, 
                                             eMode, 
                                             nRet);
-    
+	
+	printf("###### CAPMT ##########\n");
+
+	for(i = 0; i < nTotalLen; ++i)
+	{
+		printf("0x%x \t", CAPMTBuf[i]);
+		if((i + 1) % 10 == 0)
+		{
+			printf("\n");
+		}
+	}
+
+	printf("\n###### CAPMT End ##########\n");
+	
+											
     return WVCI_SUCCESS;
 }
 
@@ -2189,14 +2191,16 @@ int WVCI_SetTSBypassass2CAM(U8 u8Slot, U32 u32StreamID)
 
 int WVCI_SetTSBypass2CAMFlag(U8 u8Slot)
 {
-    FPGA_setCAMbypassOn(u8Slot);
+    //FPGA_setCAMbypassOn(u8Slot);
+	FPGA_setCAMbypassOff(u8Slot);
     
     return WVCI_SUCCESS;
 }
 
 int WVCI_ClearTSBypass2CAMFlag(U8 u8Slot)
 {
-    FPGA_setCAMbypassOff(u8Slot);
+    //FPGA_setCAMbypassOff(u8Slot);
+	FPGA_setCAMbypassOn(u8Slot);
  
     return WVCI_SUCCESS;
 }
@@ -2216,37 +2220,49 @@ int WVCI_ClearTSBypass2CAMFlag(U8 u8Slot)
 int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
 {
     wvErrCode enErrCode = WV_SUCCESS; 
-    int i = 0;
+    U16 i = 0;
     U8 u8Slot = 0;
     TSInfo *pstParamTS = NULL;
     IndexInfoList arstDescrambledProgIndexList[WVCI_MAX_SLOT_NUM];
     U16 u16InTSIndex = INDEX_INVALID_VALUE;
     U16 u16ProgIndex = INDEX_INVALID_VALUE;
     U8 u8Mode = 0;
+	IndexInfoList stIndexInfoList;
+	U16 j = 0;
 
     pstParamTS = TSP_GetTSParamHandle();
 
 	//Ëé∑ÂèñÊâÄÊúâÁöÑCIËß£Êâ∞ÁöÑ‰ø°ÊÅØ
-    for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
-    {
-        arstDescrambledProgIndexList[u8Slot].u16IndexListNum = 0;
-        if (WV_SUCCESS != TSP_GetInputTSIndex(u8Slot, pstParamTS, &u16InTSIndex))
-        {
-            continue;
-        }
-
-        enErrCode = TSP_GetInTSProgIndexList(u16InTSIndex, pstParamTS, &arstDescrambledProgIndexList[u8Slot]);
-        if (WV_SUCCESS != enErrCode)
-        {
-            log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
-               "[%s:%d]TSP_GetOutTSProgIndexList Error:enErrCode[%X],u8Slot[%u],u16OutTSIndex[%u]\r\n",
-               __FUNCTION__, __LINE__, enErrCode, u8Slot, u16InTSIndex);
-            return (int)enErrCode;
-        }
-    }
+	for(j = 0; j < WVCI_MAX_SLOT_NUM; ++j)
+	{
+		for(i = 0; i < WVCI_MAX_SLOT_NUM; ++i)
+		{
+			if(j == pstParamTS->pInputTS[i].u16ChannelID)
+			{
+				enErrCode = TSP_GetInTSProgIndexList(i, pstParamTS, &arstDescrambledProgIndexList[j]);
+				//TODO
+				//Âà§Êñ≠ÊòØÂê¶ÈúÄË¶ÅËß£Êâ∞
+		        if (WV_SUCCESS != enErrCode)
+		        {
+		            log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
+		               "[%s:%d]TSP_GetOutTSProgIndexList Error:enErrCode[%X],u8Slot[%u],u16OutTSIndex[%u]\r\n",
+		               __FUNCTION__, __LINE__, enErrCode, u8Slot, i);
+		            return (int)enErrCode;
+		        }
+				break;
+			}
+		}
+	}
+    
     
     for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
     {
+		// 
+		if(u8Slot != emSlotMode)
+        {
+			continue;
+        }
+		
         if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)
         {
             WVCI_ClearTSBypass2CAMFlag(u8Slot);
@@ -2258,20 +2274,16 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
         }
     }
 
+	//Ëé∑ÂèñÊâÄÊúâËäÇÁõÆÁöÑPMT
+
     for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
     {
-		/*
-        if (((CI_SLOT0 == u8Slot) && (emSlotMode == ONLY_SLOT_1))
-            || ((CI_SLOT1 == u8Slot) && (emSlotMode == ONLY_SLOT_0)))
-        {
-            continue;
-        }
-        */
         if(u8Slot != emSlotMode)
         {
 			continue;
         }
 
+		printf("u8Slot = %u, u16IndexListNum = %u\n", u8Slot, arstDescrambledProgIndexList[u8Slot].u16IndexListNum);
         if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// 
         {
             WVCI_GenerateCAPMT(u8Slot,
@@ -2460,7 +2472,7 @@ void WVCI_TEST(void)
 	    //WVCI_SetTSToCAM(CI_SLOT0, 0);
 
 		//TODO
-	    WVCI_SetCAPMT(i, u8testCAPMT, 38);
+	    //WVCI_SetCAPMT(i, u8testCAPMT, 38);
 	    WVCI_UpdateSetting(i);
 	}
     

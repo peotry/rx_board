@@ -3048,6 +3048,10 @@ void *TSP_ScanTSRoutine(void *pArg)
 		//清除Tuner锁定发生变化的标志
         Tuner_ClearLockFreqChangeFlag(u8Channel);
         TSP_SetClearTSFlag(u8Channel, FALSE);
+
+		TSInfo * pstTS = TSP_GetTSParamHandle();
+		LUT_SetInputLUT(pstTS);
+
     }
 
     pthread_exit(NULL);

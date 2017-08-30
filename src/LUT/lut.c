@@ -22,12 +22,18 @@
 #include "FPGA.h"
 
 
-
 wvErrCode LUT_SetInputLUTIPInfo(U8 u8LUTIndex, U32 u32IP, U16 u16UDPPort, U8 aru8MAC[6])
 {
 	wvErrCode ret = TSP_SetInputLUTIPInfo(u8LUTIndex, u32IP, u16UDPPort, aru8MAC);
 
 	return ret;
+}
+
+wvErrCode LUT_SetStreamID2LUT(U8 u8LUTIndex, U8 u8StreamID)
+{
+	wvErrCode ret = WV_SUCCESS;
+
+	
 }
 
 
@@ -105,6 +111,7 @@ wvErrCode LUT_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry 
 		if(u8DestSlot == pstParamTS->pInputTS[i].u16ChannelID)
 		{
 			u16TSIndex = i;
+			break;
 		}
 	}
 	printf("Ts Index = %u\n", pstParamTS->pInputTS[u16TSIndex].u16Index);
@@ -388,12 +395,12 @@ wvErrCode LUT_SetInputLUT(TSInfo *pstParamTS)
 		u32IPAddr = 0xE30A145A + u8LUTIndex;
 		u16UDPPort = 1234;
 				
-		aru8MAC[0] = 0x00;
-		aru8MAC[1] = 0x0a;
-		aru8MAC[2] = 0x35;
-		aru8MAC[3] = 0x00;
-		aru8MAC[4] = 0x01;
-		aru8MAC[5] = 0x22 + u8LUTIndex;
+		aru8MAC[0] = 0x01;
+		aru8MAC[1] = 0x00;
+		aru8MAC[2] = 0x5e;
+		aru8MAC[3] = 0x0a;
+		aru8MAC[4] = 0x14;
+		aru8MAC[5] = 0x5a + u8LUTIndex;
 
 		//设置输出的IP 、端口、MAC
 		enErrCode = LUT_SetInputLUTIPInfo(u8LUTIndex, u32IPAddr, u16UDPPort, aru8MAC);
@@ -440,6 +447,7 @@ wvErrCode LUT_SetInputLUT(TSInfo *pstParamTS)
 
     return WV_SUCCESS;
 }
+
 
 
 
