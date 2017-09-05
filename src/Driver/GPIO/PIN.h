@@ -29,10 +29,23 @@ typedef enum
     HW_VER3 = 39,
 }HW_VER_PIN;
 
+typedef enum
+{
+	SLOT_BIT_0 = 21,
+	SLOT_BIT_1 = 20,
+	SLOT_BIT_2 = 19,
+	SLOT_BIT_3 = 18,
+	SLOT_BIT_4 = 17,
+	SLOT_BIT_5 = 16,
+}SLOT_ID_PIN;
+
 void PIN_LEDOrangeLight();
 void PIN_LEDGreenLight();
 void PIN_LEDOut();
 
 U32 PIN_GetHWVerSion(void);
+
+U32 PIN_GetSlotID(void);
+
 
 #endif

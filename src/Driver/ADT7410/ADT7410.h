@@ -59,6 +59,7 @@ TempErrCode ADT7410_CloseBus(void);
 TempErrCode ADT7410_Init(void);
 S32 ADT7410_Detect(void);
 TempErrCode ADT7410_GetTemperature(U32  * pu32temp);
+
 void ADT7410_example(void);
 
 

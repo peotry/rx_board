@@ -100,3 +100,31 @@ U32 PIN_GetHWVerSion(void)
 }
 
 
+int g_SlotID = 0;
+
+U32 PIN_GetSlotID(void)
+{
+	U32 u32Value   = 0;
+	U32 u32SlotBit[5] = {0};
+	U32 i = 0;
+
+	GPIO_GetGpio(SLOT_BIT_0, &u32SlotBit[0]);
+	GPIO_GetGpio(SLOT_BIT_1, &u32SlotBit[1]);
+	GPIO_GetGpio(SLOT_BIT_2, &u32SlotBit[2]);
+	GPIO_GetGpio(SLOT_BIT_3, &u32SlotBit[3]);
+	GPIO_GetGpio(SLOT_BIT_4, &u32SlotBit[4]);
+	GPIO_GetGpio(SLOT_BIT_5, &u32SlotBit[5]);
+
+	for(i = 0; i < 5; ++i)
+	{
+		u32Value |= (u32SlotBit[i] << i);
+	}
+
+	u32Value &= 0x3f;
+
+	g_SlotID = u32Value;
+
+	return u32Value;
+}
+
+

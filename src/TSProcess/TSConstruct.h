@@ -13,6 +13,8 @@
 #ifndef _TSCONSTRUCT_H_
 #define _TSCONSTRUCT_H_
 #include <pthread.h>
+#include <stdbool.h>
+
 #include "appGlobal.h"
 #include "ts.h"
 #include "TSProcess.h"
@@ -782,6 +784,9 @@ void TSP_BypassAllTS2CIOutput(void);
 void TSP_DebugPrintCIOutputLUTInfo(void);
 
 wvErrCode TSP_ConstructSITableOfCIOutput(TSInfo *pstParamTS);
+
+bool TSP_IsFirstScanTS(U8 u8Channel);
+
 
 
 #endif

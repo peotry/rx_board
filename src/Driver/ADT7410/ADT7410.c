@@ -178,7 +178,7 @@ TempErrCode ADT7410_GetTemperature(U32  * pu32temp)
 {
     U8 value1 = 0;
     U8 value2 = 0;
-    float tmp = 0;
+    //float tmp = 0;
 
     ADT7410_read(0x00, &value1);
     ADT7410_read(0x01, &value2);
@@ -188,17 +188,14 @@ TempErrCode ADT7410_GetTemperature(U32  * pu32temp)
 
     if((*pu32temp) & 0x1000)//Negative Temperature
     {
-    	tmp = (float)((*pu32temp)-8192)/16;
-		printf("tmp = %f\n", tmp);
     	*pu32temp = (float)((*pu32temp)-8192)/16;
-		return WV_TEMP_NEGATIVE;
     }
     else
     {
-    	tmp = (float)(*pu32temp)/16;
-		printf("tmp = %f\n", tmp);
     	*pu32temp = (float)(*pu32temp)/16;
     }
+	
     return WV_TEMP_SUCCESS;
 }
+
 

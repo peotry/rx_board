@@ -286,7 +286,7 @@ int TSMUX_CI_SetMaxBitrate(U32 u32Bitrate);
 wvErrCode WVCI_GetCIStatus(U8 u8Slot, WAVCI_Status_4_web_t *pstCIStatus, TSInfo *pstParamTS);
 
 
-#ifdef ENABLE_CHECK_DECODER_ESLIST_2DESCRAMBLE                      // 香港客户，旧CAM，单个节目只支持10个ES
+#ifdef ENABLE_CHECK_DECODER_ESLIST_2DESCRAMBLE                     
 BOOL WVCI_IsPlayingServiceInDescrambled(U8 u8Slot);
 #endif
 
@@ -295,6 +295,11 @@ WAVCI_MMI_Info_t *WVCI_MMI_GetMenuInfo(void);
 int WVCI_MMI_CommandProcess(BYTE u8Slot, BYTE u8MMICmd, BYTE *pucData, int nDataLen, int nTimoutMS);
 
 void WVCI_TEST(void);
+
+int WVCI_SetTSBypassass2CAM(U8 u8Slot, U32 u32StreamID);
+
+int WVCI_ClearTSBypass2CAM(U8 u8Slot);
+
 
 #endif // __WV_CI_H_
 

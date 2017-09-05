@@ -408,6 +408,7 @@ wvErrCode web_ProcessTSDest(U16 u16InTSIndex, Dest *pstNewDest, TSInfo *pstParam
             __FUNCTION__, __LINE__, enErrCode);
         return enErrCode;
     }
+	/*
 
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
@@ -417,6 +418,7 @@ wvErrCode web_ProcessTSDest(U16 u16InTSIndex, Dest *pstNewDest, TSInfo *pstParam
             __FUNCTION__, __LINE__, enErrCode);
     }
 
+	
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -424,6 +426,7 @@ wvErrCode web_ProcessTSDest(U16 u16InTSIndex, Dest *pstNewDest, TSInfo *pstParam
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     return TSP_StoreTSConfiguration();
 }
@@ -461,6 +464,8 @@ wvErrCode web_ProcessProgDest(U16 u16InProgIndex, Dest *pstNewDest, TSInfo *pstP
             __FUNCTION__, __LINE__, enErrCode);
         return enErrCode;
     }
+	
+	/*
 
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
@@ -470,6 +475,7 @@ wvErrCode web_ProcessProgDest(U16 u16InProgIndex, Dest *pstNewDest, TSInfo *pstP
             __FUNCTION__, __LINE__, enErrCode);
     }
 
+
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -477,6 +483,7 @@ wvErrCode web_ProcessProgDest(U16 u16InProgIndex, Dest *pstNewDest, TSInfo *pstP
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     return TSP_StoreTSConfiguration();
 }
@@ -1120,7 +1127,7 @@ wvErrCode web_XmlDescramble(DescrambleProgInfo arstDescrambleProgInfo[], U16 u16
 
 
 	//设置LUT
-	LUT_SetInputLUT(pstParamTS);
+	//LUT_SetInputLUT(pstParamTS);
 
 	return ret;
 }

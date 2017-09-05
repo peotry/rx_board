@@ -2970,7 +2970,7 @@ BOOL TSP_IsNeedToScanTS(U16 u16Channel)
         return FALSE;
     }
 
-    if (TSP_IsClearTS(u16Channel) || Tuner_IsLockFreqChange(u16Channel))
+    if (TSP_IsFirstScanTS(u16Channel) || Tuner_IsLockFreqChange(u16Channel))
     {
         return TRUE;
     }
@@ -3049,9 +3049,23 @@ void *TSP_ScanTSRoutine(void *pArg)
         Tuner_ClearLockFreqChangeFlag(u8Channel);
         TSP_SetClearTSFlag(u8Channel, FALSE);
 
-		TSInfo * pstTS = TSP_GetTSParamHandle();
-		LUT_SetInputLUT(pstTS);
+		/*
+		
+		//选择输出流号	
+		LUT_OpenStream(u8Channel, TSP_InputChannel2StreamID(u8Channel));
+			
+		U8 u8LUTIndex = 0;
+		U8 u8DestSlot = 0;
+		U16 u16UDPPort = 0;
+		U32 u32IPAddr = 0;
+		u32IPAddr = 0xE30A145A + u8Channel;
+		u16UDPPort = 1234;
 
+		//TODO
+		//设置输出的IP 、端口、MAC
+		LUT_SetInputLUTIPInfo(u8Channel, u32IPAddr, u16UDPPort);
+	
+		*/
     }
 
     pthread_exit(NULL);

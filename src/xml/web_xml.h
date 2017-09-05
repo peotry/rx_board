@@ -17,16 +17,6 @@ typedef unsigned short U16;
 #define STATUS_SUCCCESS ("Success")
 #define STATUS_FAILURE  ("Failure")
 
-//主动上报信息
-enum _BoardType
-{
-	BOARD_TYPE_RECV,
-	BOARD_TYPE_TRANS,
-	BOARD_TYPE_MONITOR,
-};
-
-typedef enum _BoardType BoardType;
-
 //错误码
 #define XML_ERROR_CODE_DEVINFO    ("001")
 #define XML_ERROR_CODE_UPDATE     ("002")
@@ -37,49 +27,6 @@ typedef enum _BoardType BoardType;
 #define XML_ERROR_CODE_GET_DEMODULATE  ("007")
 #define XML_ERROR_CODE_SET_DECRYPT  ("008")
 #define XML_ERROR_CODE_GET_DECRYPT  ("009")
-
-struct _BoardInfo
-{
-	U8 chassis;
-	U8 slot;
-	U8 board_type;
-	U8 chip_temp;
-	U8 status;
-	U8 err_code;
-	U8 reserved;
-};
-
-typedef struct _BoardInfo BoardInfo;
-typedef struct _BoardInfo * BoardInfoPtr;
-
-
-struct _ChannelResource
-{
-	U8 chassis;
-	U8 slot;
-	U8 channel;
-	U8 reserved1;
-	U8 ip_addr[4];
-	U16 port;
-	U8 reserved2;
-};
-
-typedef struct _ChannelResource ChannelResource;
-typedef struct _ChannelResource * ChannelResourcePtr;
-
-struct _CorrectingTime
-{
-	U16 year;
-	U8 month;
-	U8 day;
-	U8 hour;
-	U8 minute;
-	U8 second;
-	U8 reserved;
-};
-
-typedef struct _CorrectingTime CorrectingTime;
-typedef struct _CorrectingTime * CorrectingTimePtr;
 
 
 //xml通信
@@ -162,6 +109,7 @@ struct _ProgramDecrypt
 	U16 u16ChannelID;
 	U16 u16ServiceID[MAX_PROGRAM_NUMBER];
 	U8 u8CAMIndex[MAX_PROGRAM_NUMBER];
+	U8 u8ServiceName[MAX_PROGRAM_NUMBER][STRING_MAX_LEN];
 };
 
 typedef struct _ProgramDecrypt ProgramDecrypt;
@@ -201,7 +149,19 @@ wvErrCode WebXml_GetDemodulateInfoR(xmlDocPtr *xml_doc_ptr, const char *status, 
 wvErrCode WebXml_SetDecryptInfoR(xmlDocPtr *xml_doc_ptr, const char *status, const char *comment);
 wvErrCode WebXml_GetDecryptInfoR(xmlDocPtr *xml_doc_ptr, const char *status, const char *comment);
 
-wvErrCode WelXml_GetProgramInfoFromTSInfo(TSInfo * pstTS);
+wvErrCode WebXml_GetProgramInfoFromTSInfo(TSInfo * pstTS);
+wvErrCode WebXml_GetParamsInfoFromTunerParams(void);
+
+wvErrCode WebXml_SetProgramInfoToTSInfo(TSInfo * pstTS);
+wvErrCode WebXml_SetParamsInfoToTunerParams(void);
+
+
+
+ParamsInfoPtr  WebXml_GetParamsInfoPtr(U8 u8Index);
+
+ProgramDecryptPtr  WebXml_GetProgramDecryptPtr(U8 u8Index);
+
+
 
 #endif
 

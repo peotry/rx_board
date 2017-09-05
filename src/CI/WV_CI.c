@@ -20,11 +20,17 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdbool.h>
+
+#include "appGlobal.h"
 
 // CI
 #include "all.h"
 #include "PCMCIA.h"
 #include "CI.h"
+
+#include "xml/web_xml.h"
+
 
 // GUI
 #include "WVCI_GUI.h"
@@ -32,6 +38,8 @@
 #include "WV_CI.h"
 #include "TSConstruct.h"
 #include "FPGA.h"
+
+
 
 #define WVCI_InfoPrint(x)       printf x
 #define WVCI_ErrorPrint(x)      printf x
@@ -334,7 +342,7 @@ int WVCI_MMI_CommandProcess(BYTE u8Slot, BYTE u8MMICmd, BYTE *pucData, int nData
         case WVCI_MMI_SEND_PIN_CODE:
         {
             CI_LOG_INF("[MMI] WVCI_MMI_SEND_PIN_CODE %s, answer len:%d\r\n", g_u8MMI_PINCode, g_u8MMI_AnswerTextLen);            
-            bIsInputPINOperate = FALSE;
+            bIsInputPINOperate = false;
             CI_MMI_AnswerInput(u8Slot, g_u8MMI_PINCode, g_u8MMI_AnswerTextLen);            
             break;
         }
@@ -473,7 +481,7 @@ static void CIMax_CheckSlot(CIHANDLE hCI,BYTE ucSlotNum)
     // vars    
     PCMCIA_INFO     *pInfo;
     int             nRet = 0;
-    BOOL            bIsReturn = FALSE;
+    BOOL            bIsReturn = false;
     int             nMaxRetryTimes = 5;
     
     switch(hCI->emSlotState)
@@ -614,10 +622,13 @@ void WVCI_TaskMonitoring(void *pvParams)
             }
         }
 
+		//TODO
+		/*
 		if(nEventOfCAMStatus != 0)
 		{
 			WVCI_TEST();
 		}
+		*/
     }
 }
 
@@ -706,7 +717,7 @@ int CIMAX_PCMCIAModuleInserted(CIHANDLE hCI)
     
     hCI->emSlotState = CIMAX_INSERTED;
     
-    hCI->bLastAccessWasToAttrMem = TRUE;
+    hCI->bLastAccessWasToAttrMem = true;
 
     return nRet;
 }
@@ -763,7 +774,7 @@ void WVCI_InsertCAM(U8 u8Slot)
     CIMAX_PCMCIAModuleInserted(&g_CIMax_CIHandles[u8Slot]);
     g_CIMax_CIHandles[u8Slot].emSlotState = CIMAX_INSERTED;
     CAMCommStatus[u8Slot].CISlotState  = CIMAX_INSERTED;
-    CAMCommStatus[u8Slot].CAMCommStatusError = FALSE;
+    CAMCommStatus[u8Slot].CAMCommStatusError = false;
     // power off 
     WVCI_SYSPowerOffModule(u8Slot); 
    // OSTimeDlyHMSM(0, 0, 0, 500);
@@ -807,7 +818,7 @@ void WVCI_RemoveCAM(U8 u8Slot)
     
     // wav_status
     CAMCommStatus[u8Slot].CISlotState = CIMAX_EMPTY;
-    CAMCommStatus[u8Slot].CAMCommStatusError = FALSE;
+    CAMCommStatus[u8Slot].CAMCommStatusError = false;
     CIMAX_PCMCIAModuleRemoved(&g_CIMax_CIHandles[u8Slot]);    
     g_ptWVCIStatusInst->m_u8SlotInserted[u8Slot] = 0x00;
     WVCI_SYSPowerOffModule(u8Slot);  
@@ -966,12 +977,12 @@ void WVCI_GetCAM_Comm_status(WVAlarm_CI_Status_t * CommStatus,int SlotIndex)
  *     ≈–∂œ¡˜¿‡–Õ
  * Input  : 
  * Output : 
- * Returns: Œ™ ”∆µ‘Ú∑µªÿTRUE,∑Ò‘Ú∑µªÿFALSE
+ * Returns: Œ™ ”∆µ‘Ú∑µªÿtrue,∑Ò‘Ú∑µªÿfalse
  * 
  ******************************************************************************/
 BOOL WVCI_IsVideoStreamType(U8 u8StreamType)
 {
-    BOOL    bRet = FALSE;
+    BOOL    bRet = false;
     
     switch (u8StreamType)
     {
@@ -982,7 +993,7 @@ BOOL WVCI_IsVideoStreamType(U8 u8StreamType)
         case STREAM_TYPE_VIDEO_ATSC:
         case STREAM_TYPE_VIDEO_AVS:
         {
-            bRet = TRUE;
+            bRet = true;
             break;
         }
         
@@ -1494,22 +1505,22 @@ BOOL WVCI_IsCASysIdInList(U8 u8Slot, WORD wCASysId)
     int i;
     if(u8Slot > MAX_CI_SLOTS)
     {
-        return FALSE;
+        return false;
     }
 //  The spec does not mention any requirement
 //  to filter the PMT based on the reported
 //  ca system ids, but really a lot of modules
 //  require this to function properly.
 //  if(!hCI->fModuleRequiresCAIDFiltering)
-//      return TRUE;
+//      return true;
     for(i=0;i<CiSlot[u8Slot].wNumCASystems;i++)
     {
         if(CiSlot[u8Slot].wCASystemIDs[i]==wCASysId)
         {
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 BOOL WVCI_IsStreamTypeInList(U8 u8StreamType)
@@ -1520,11 +1531,11 @@ BOOL WVCI_IsStreamTypeInList(U8 u8StreamType)
     {
         if(u8StreamType == g_pDefaultStreamTypeList[k])
         {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 #ifdef ENABLE_CHECK_DECODER_ESLIST_2DESCRAMBLE                      // œ„∏€øÕªß£¨æ…CAM£¨µ•∏ˆΩ⁄ƒø÷ª÷ß≥÷10∏ˆES
@@ -1683,18 +1694,18 @@ static U32  WVCI_GetPlayingServiceInfo(void)
  * DESCRIPTION: - Check service is in playing or not
  * Input  : u16ServiceOffset            offset of service of program list
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 static BOOL WVCI_IsServicePlaying(U16 u16ServiceOffset)
 {
     if (u16ServiceOffset == s_DecoderESInfo.u16ServiceOffset)
     {    
-        return TRUE;
+        return true;
     }
     else
     {
-        return FALSE;
+        return false;
     }
 }
 
@@ -1704,7 +1715,7 @@ static BOOL WVCI_IsServicePlaying(U16 u16ServiceOffset)
  * DESCRIPTION: - Check es is in playing or not
  * Input  : u16ESPID                    es pid 
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 static BOOL WVCI_IsESinPlaying(U16 u16ESPID)
@@ -1717,11 +1728,11 @@ static BOOL WVCI_IsESinPlaying(U16 u16ESPID)
     {
         if (u16ESPID == (s_DecoderESInfo.u16PlayingESPID[ii] & 0x1FFF))
         {
-            return TRUE;
+            return true;
         }       
     }
     
-    return FALSE;
+    return false;
 }
 
 
@@ -1732,7 +1743,7 @@ static BOOL WVCI_IsESinPlaying(U16 u16ESPID)
                   for which is not in playing. case priority playing es.
  * Input  : u8Slot                    slot id of cam. 
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 static BOOL WVCI_IsPositionEnough(U8 u8Slot)
@@ -1758,11 +1769,11 @@ static BOOL WVCI_IsPositionEnough(U8 u8Slot)
     nLeftPosition = u8CAMMaxSupportedESNum - nInallUsedPosition - nNeedReservedPosition;    
     if (nLeftPosition > 0)
     {
-        return TRUE;
+        return true;
     }
     else 
     {
-        return FALSE;
+        return false;
     }
 }
 
@@ -1775,7 +1786,7 @@ static BOOL WVCI_IsPositionEnough(U8 u8Slot)
  *                More than cam's capacity is as overflow.
  * Input  : u8Slot                  slot id of cam. 
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 static BOOL WVCI_IsESOverflow(U8 u8Slot)
@@ -1786,7 +1797,7 @@ static BOOL WVCI_IsESOverflow(U8 u8Slot)
     // check params
     if (u8Slot >= WVCI_MAX_SLOT_NUM)
     {
-        return TRUE; // bad parameters
+        return true; // bad parameters
     }
 
     // u32CAMMaxESNumber: cam capacity is set by user on debug page. 
@@ -1794,11 +1805,11 @@ static BOOL WVCI_IsESOverflow(U8 u8Slot)
     
     if (s_s16DescrambleESNum < u8CAMMaxSupportedESNum)
     {
-        return FALSE;
+        return false;
     }
     else
     {
-        return TRUE;
+        return true;
     }
 }
 
@@ -1815,7 +1826,7 @@ static BOOL WVCI_IsESOverflow(U8 u8Slot)
  *          u16ServiceOffset        service offset in program list
  *          u16ESPID                pid of es be checked
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESPID)
@@ -1825,7 +1836,7 @@ static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESP
     // check params
     if (u8Slot >= WVCI_MAX_SLOT_NUM)
     {
-        return FALSE; // bad parameters
+        return false; // bad parameters
     }
     
     // check service's es-list is overflow or not
@@ -1836,7 +1847,7 @@ static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESP
         // when service's es-list is more than cam's captiliy, will skip the end party of es-list.         
         // Eg. Hongkong Customer-SMIT-CAM(only supported 10 es)
         CI_LOG_ERR("[WVCI_IsESNeed2Descramble] skip this es, no add into CAPMT. u16ESPID:0x%X. --overflow \r\n", u16ESPID); 
-        return FALSE;       
+        return false;       
     }
 
     // check service is playing or not
@@ -1845,7 +1856,7 @@ static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESP
         s_s16DescrambleESNum++;
         // service is not in playing, so add the es in order.
         CI_LOG_ERR("[WVCI_IsESNeed2Descramble] descramble u16ESPID:0x%X. --in order \r\n", u16ESPID); 
-        return TRUE;
+        return true;
     }
 
     // service is in playing, descram the playing es first
@@ -1855,20 +1866,20 @@ static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESP
         s_s16DescrambleESNum++;
         s_s16HadAddPlayingESNum++;
         CI_LOG_ERR("[WVCI_IsESNeed2Descramble] descramble u16ESPID:0x%X. --playing \r\n", u16ESPID); 
-        return TRUE;
+        return true;
     }
     // if left position is enough, can be add
     else if (WVCI_IsPositionEnough(u8Slot))
     {
         s_s16DescrambleESNum++;
         CI_LOG_ERR("[WVCI_IsESNeed2Descramble] descramble u16ESPID:0x%X. --left enough\r\n", u16ESPID);         
-        return TRUE;
+        return true;
     }
     // not in playing and no enough space, skip.
     else 
     {
         CI_LOG_ERR("[WVCI_IsESNeed2Descramble] skip u16ESPID:0x%X. --skip\r\n", u16ESPID); 
-        return FALSE; // skip this es pid to descramble
+        return false; // skip this es pid to descramble
     }        
 }
 
@@ -1879,7 +1890,7 @@ static BOOL WVCI_IsESNeed2Descramble(U8 u8Slot, U16 u16ServiceOffset, U16 u16ESP
  * DESCRIPTION: - check playing service is descramble by specified slot
  * Input  : u8Slot                  slot id of cam. 
  * Output : void
- * Returns: TRUE  or FALSE
+ * Returns: true  or false
  * 
  ******************************************************************************/
 BOOL WVCI_IsPlayingServiceInDescrambled(U8 u8Slot)
@@ -1890,7 +1901,7 @@ BOOL WVCI_IsPlayingServiceInDescrambled(U8 u8Slot)
     // check params
     if (u8Slot >= WVCI_MAX_SLOT_NUM)
     {
-        return FALSE; // bad parameters
+        return false; // bad parameters
     }
     
     //
@@ -1899,18 +1910,18 @@ BOOL WVCI_IsPlayingServiceInDescrambled(U8 u8Slot)
     {
         if ((gDMPParam.ts.InputProgList[u16ServiceOffset].DescrambleFlag & 0x01) == 0x01)
         {            
-            return TRUE;
+            return true;
         }
     }
     else
     {
         if ((gDMPParam.ts.InputProgList[u16ServiceOffset].DescrambleFlag & 0x02) == 0x02)
         {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 #endif  // #ifdef ENABLE_CHECK_DECODER_ESLIST_2DESCRAMBLE
@@ -2182,28 +2193,36 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16InProgIndex, TSInfo *pstParamTS, U8 eMo
     return WVCI_SUCCESS;
 }
 
-int WVCI_SetTSBypassass2CAM(U8 u8Slot, U32 u32StreamID)
+static int WVCI_SetTSBypass2CAMFlag(U8 u8Slot)
 {
-    FPGA_setCISid(u8Slot, u32StreamID);
-
-    return WVCI_SUCCESS;
-}
-
-int WVCI_SetTSBypass2CAMFlag(U8 u8Slot)
-{
-    //FPGA_setCAMbypassOn(u8Slot);
-	FPGA_setCAMbypassOff(u8Slot);
+    FPGA_setCAMbypassOn(u8Slot);
     
     return WVCI_SUCCESS;
 }
 
-int WVCI_ClearTSBypass2CAMFlag(U8 u8Slot)
+static int WVCI_ClearTSBypass2CAMFlag(U8 u8Slot)
 {
-    //FPGA_setCAMbypassOff(u8Slot);
-	FPGA_setCAMbypassOn(u8Slot);
+    FPGA_setCAMbypassOff(u8Slot);
  
     return WVCI_SUCCESS;
 }
+
+
+int WVCI_SetTSBypassass2CAM(U8 u8Slot, U32 u32StreamID)
+{
+    FPGA_setCISid(u8Slot, u32StreamID);
+	WVCI_SetTSBypass2CAMFlag(u8Slot);
+
+    return WVCI_SUCCESS;
+}
+
+int WVCI_ClearTSBypass2CAM(U8 u8Slot)
+{
+	WVCI_ClearTSBypass2CAMFlag(u8Slot);
+	return WVCI_SUCCESS;
+}
+
+
 
 /******************************************************************************
  * WVCI_UpdateSetting() - ∏˘æ›TS≈‰÷√∏¸–¬CIƒ£øÈµƒ”¶”√
@@ -2229,6 +2248,7 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
     U8 u8Mode = 0;
 	IndexInfoList stIndexInfoList;
 	U16 j = 0;
+	U8 u8DecryptFlag = 0;
 
     pstParamTS = TSP_GetTSParamHandle();
 
@@ -2253,73 +2273,80 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
 			}
 		}
 	}
-    
-    
-    for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
+
+	ProgramDecryptPtr pstProgramDecrypt = WebXml_GetProgramDecryptPtr(u8Slot);
+	for(i = 0; i < pstProgramDecrypt->u32ProgramNumber; ++i)
+	{
+		//ÊúâËäÇÁõÆÈúÄË¶ÅËß£Êâ∞
+		if(INVALID_CAM_INDEX != pstProgramDecrypt->u8CAMIndex[i])
+		{
+			u8DecryptFlag = 1;
+			break;
+		}
+	}
+
+	if(u8DecryptFlag)
+	{
+		//Ëß£Êâ∞
+		LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_CI, "Slot[%u] Decrypt..", u8Slot);
+        WVCI_SetTSBypassass2CAM(u8Slot, TSP_InputChannel2StreamID(u8Slot));
+	}
+	else
+	{
+		LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_CI, "Slot[%u] Not Decrypt..", u8Slot);
+		WVCI_ClearTSBypass2CAM(u8Slot);
+	}
+
+	
+	/*
+	//‰∏çËß£Êâ∞
+	if ((0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum))
     {
-		// 
-		if(u8Slot != emSlotMode)
+        WVCI_ClearTSBypass2CAM(u8Slot);
+    }
+    else
+    {
+		//Ëß£Êâ∞
+        WVCI_SetTSBypassass2CAM(u8Slot, TSP_InputChannel2StreamID(u8Slot));
+    }
+    */
+
+	//ÁîüÊàêCAPMT
+	if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// 
+    {
+        WVCI_GenerateCAPMT(u8Slot,
+                            s_u16LastDescrProgIndex[u8Slot],
+                            pstParamTS,
+                            CA_PMT_LIST_MANAGEMENT_WELLAV_DESCRAMBLE); 
+        return WV_SUCCESS;
+    }
+    else if (1 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// ONLY one CAPMT
+    {
+        WVCI_GenerateCAPMT(u8Slot,
+                            arstDescrambledProgIndexList[u8Slot].aru16IndexList[0],
+                            pstParamTS,
+                            CA_PMT_LIST_MANAGEMENT_ONLY);
+        return WV_SUCCESS;
+    }
+
+    for (i = 0; i < arstDescrambledProgIndexList[u8Slot].u16IndexListNum; i++)
+    {
+        u16ProgIndex = arstDescrambledProgIndexList[u8Slot].aru16IndexList[i];
+
+        if (0 == i)
         {
-			continue;
+            u8Mode = CA_PMT_LIST_MANAGEMENT_FIRST;
         }
-		
-        if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)
+        else if ((i + 1) == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)
         {
-            WVCI_ClearTSBypass2CAMFlag(u8Slot);
+            u8Mode = CA_PMT_LIST_MANAGEMENT_LAST;
         }
         else
         {
-            WVCI_SetTSBypassass2CAM(u8Slot, TSP_InputChannel2StreamID(u8Slot));
-            WVCI_SetTSBypass2CAMFlag(u8Slot);
-        }
-    }
-
-	//Ëé∑ÂèñÊâÄÊúâËäÇÁõÆÁöÑPMT
-
-    for (u8Slot = 0; u8Slot < WVCI_MAX_SLOT_NUM; u8Slot++)
-    {
-        if(u8Slot != emSlotMode)
-        {
-			continue;
+            u8Mode = CA_PMT_LIST_MANAGEMENT_MORE;
         }
 
-		printf("u8Slot = %u, u16IndexListNum = %u\n", u8Slot, arstDescrambledProgIndexList[u8Slot].u16IndexListNum);
-        if (0 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// 
-        {
-            WVCI_GenerateCAPMT(u8Slot,
-                                s_u16LastDescrProgIndex[u8Slot],
-                                pstParamTS,
-                                CA_PMT_LIST_MANAGEMENT_WELLAV_DESCRAMBLE); 
-            continue;
-        }
-        else if (1 == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)// ONLY one CAPMT
-        {
-            WVCI_GenerateCAPMT(u8Slot,
-                                arstDescrambledProgIndexList[u8Slot].aru16IndexList[0],
-                                pstParamTS,
-                                CA_PMT_LIST_MANAGEMENT_ONLY);
-            continue;
-        }
-
-        for (i = 0; i < arstDescrambledProgIndexList[u8Slot].u16IndexListNum; i++)
-        {
-            u16ProgIndex = arstDescrambledProgIndexList[u8Slot].aru16IndexList[i];
-
-            if (0 == i)
-            {
-                u8Mode = CA_PMT_LIST_MANAGEMENT_FIRST;
-            }
-            else if ((i + 1) == arstDescrambledProgIndexList[u8Slot].u16IndexListNum)
-            {
-                u8Mode = CA_PMT_LIST_MANAGEMENT_LAST;
-            }
-            else
-            {
-                u8Mode = CA_PMT_LIST_MANAGEMENT_MORE;
-            }
-
-            WVCI_GenerateCAPMT(u8Slot, u16ProgIndex, pstParamTS, u8Mode);
-        }
+        WVCI_GenerateCAPMT(u8Slot, u16ProgIndex, pstParamTS, u8Mode);
     }
     
     return WVCI_SUCCESS;

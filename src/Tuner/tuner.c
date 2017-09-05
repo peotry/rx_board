@@ -236,7 +236,9 @@ U32 Tuner_Default(void)
 *****************************************************************************/
 BOOL Tuner_IsLockFreqChange(U8 u8PortIndex)
 {
-    return b_IsLockFreqChange[u8PortIndex];
+	int tuner_ts_map[WVCI_MAX_SLOT_NUM] = {3,2,1,0};
+	
+    return b_IsLockFreqChange[tuner_ts_map[u8PortIndex]];
 }
 
 
@@ -264,7 +266,8 @@ void Tuner_SetLockFreqChangeFlag(U8 u8PortIndex)
 *****************************************************************************/
 void Tuner_ClearLockFreqChangeFlag(U8 u8PortIndex)
 {
-     b_IsLockFreqChange[u8PortIndex] = FALSE;
+	 int tuner_ts_map[WVCI_MAX_SLOT_NUM] = {3,2,1,0};
+     b_IsLockFreqChange[tuner_ts_map[u8PortIndex]] = FALSE;
 }
 
 
@@ -604,7 +607,7 @@ U32 Tuner_process(void)
                 if(b_LastLockStatuts[u8TunerIdx] != b_LockStatuts[u8TunerIdx])
                 {
 					//TODO
-					Tuner_SetLockFreqChangeFlag(u8TunerIdx);
+					//Tuner_SetLockFreqChangeFlag(u8TunerIdx);
                     b_LastLockStatuts[u8TunerIdx] = b_LockStatuts[u8TunerIdx];
                     LOG_PRINTF(LOG_LEVEL_ALL, LOG_MODULE_TUNER, "tuner port %d lock\r\n", u8TunerIdx);
                 }

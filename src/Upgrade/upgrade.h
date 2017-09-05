@@ -52,6 +52,37 @@ wvErrCode upgrade_CheckUpgrade(const U8 * UpgradeFileName);
 wvErrCode upgrade_UpgradeSystem(const U8 * u8UpgradeFileName);
 wvErrCode upgrade_RecieveFile(const U8 * fileData, U32 u32Datalen);
 
+struct _UpgradeInfo
+{
+	U32 u32FileSize;
+	U32 u32FileCurSize;
+};
+
+
+#define CMD_UPGRADE_START 				(0x5B)
+#define CMD_UPGRADE_START_R 			(0x5C)
+#define CMD_UPGRADE_FILE  				(0x5D)
+#define CMD_UPGRADE_FILE_R 				(0x5F)
+
+#define UPGRADE_FILE_SIZE               (0x1000000) //16M
+
+typedef enum
+{
+	UPGRADE_STATUS_NONE,
+	UPGRADE_STATUS_START,
+	UPGRADE_STATUS_RUNNING,
+	UPGRADE_STATUS_FINISH,
+	UPGRADE_STATUS_ERROR,
+}UPGRADE_STATUS;
+
+typedef struct _UpgradeInfo UpgradeInfo;
+
+void * Upgrade_Server(void *arg);
+
+UPGRADE_STATUS Upgrade_GetUpgradeStatus(void);
+void Upgrade_SetUpgradeStatus(UPGRADE_STATUS emUpgradeStatus);
+
+
 #endif
 
 

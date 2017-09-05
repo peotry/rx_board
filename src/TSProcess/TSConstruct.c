@@ -19,6 +19,9 @@
 #include "tools.h"
 #include "status.h"
 #include "SiSend.h"
+#include "web_xml.h"
+
+#include <stdbool.h>
 
 #define ALLOCATE_INPUT_PROG_NUM_PER_TIME         (100)
 #define ALLOCATE_INPUT_PID_NUM_PER_TIME          (500)
@@ -745,13 +748,16 @@ wvErrCode TSP_ClearTSConfiguration(TSInfo *pstParamTS)
 
     memset(s_aru8DestSlotRecord, 0xFF, sizeof(s_aru8DestSlotRecord));
 
-    enErrCode = TSP_SetInputLUT(pstParamTS);
+	//TODO
+	/*
+	enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     enErrCode = WVCI_UpdateSetting(ALL_SLOTS);
     if (WV_SUCCESS != enErrCode)
@@ -772,7 +778,7 @@ wvErrCode TSP_ClearTSConfiguration(TSInfo *pstParamTS)
 
     for (i = 0; i < MAX_INPUT_CHANNEL_NUM; i++)
     {
-        TSP_SetClearTSFlag(i, TRUE);
+        TSP_SetClearTSFlag(i, true);
     }
 
     for (i = 0; i < MAX_DEST; i++)
@@ -1183,6 +1189,7 @@ wvErrCode TSP_ProcessClearDestSlot(U8 u8DestSlot)
 
     s_aru8DestSlotRecord[u8DestIndex] = 0xFF;
 
+	/*
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -1190,7 +1197,9 @@ wvErrCode TSP_ProcessClearDestSlot(U8 u8DestSlot)
             "[%s:%d]TSP_SetBypassAndMUXFlag error,enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
+	/*
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -1198,6 +1207,7 @@ wvErrCode TSP_ProcessClearDestSlot(U8 u8DestSlot)
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     enErrCode = TSP_StoreTSConfiguration();
     if (WV_SUCCESS != enErrCode)
@@ -1426,7 +1436,7 @@ void TSP_InitInputProgram(U16 u16InTSIndex, U16 u16InProgIndex, TSInfo *pstParam
 *****************************************************************************/
 void TSP_InitInputPID(U8 u8PIDType, U16 u16SrcIndex, U16 u16InPIDIndex, TSInfo *pstParamTS)
 {
-    BOOL bInputErrorFlag = FALSE;
+    BOOL bInputErrorFlag = false;
     Input_TSPID *pstPID = NULL;
 
     if ((!pstParamTS) || (pstParamTS->u32InputPIDNumber <= u16InPIDIndex))
@@ -1447,7 +1457,7 @@ void TSP_InitInputPID(U8 u8PIDType, U16 u16SrcIndex, U16 u16InPIDIndex, TSInfo *
         case PID_TYPE_PS_ECMPID:
             if (pstParamTS->u32InputProgramNumber <= u16SrcIndex)
             {
-                bInputErrorFlag = TRUE;
+                bInputErrorFlag = true;
             }
             else
             {
@@ -1464,7 +1474,7 @@ void TSP_InitInputPID(U8 u8PIDType, U16 u16SrcIndex, U16 u16InPIDIndex, TSInfo *
         case PID_TYPE_OTHERPID:
             if (pstParamTS->u32InputTSNumber <= u16SrcIndex)
             {
-                bInputErrorFlag = TRUE;
+                bInputErrorFlag = true;
             }
             else
             {
@@ -1480,7 +1490,7 @@ void TSP_InitInputPID(U8 u8PIDType, U16 u16SrcIndex, U16 u16InPIDIndex, TSInfo *
         case PID_TYPE_ES_ECMPID:
             if (pstParamTS->u32InputPIDNumber <= u16SrcIndex)
             {
-                bInputErrorFlag = TRUE;
+                bInputErrorFlag = true;
             }
             else
             {
@@ -1494,7 +1504,7 @@ void TSP_InitInputPID(U8 u8PIDType, U16 u16SrcIndex, U16 u16InPIDIndex, TSInfo *
             break;
 
         default:
-            bInputErrorFlag = TRUE;
+            bInputErrorFlag = true;
             break;
     }
 
@@ -3793,6 +3803,7 @@ wvErrCode TSP_DelInputTSByChannel(U16 u16Channel)
         TSP_MutexUnlock();
         return enErrCode;
     }
+	/*
 
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
@@ -3802,6 +3813,7 @@ wvErrCode TSP_DelInputTSByChannel(U16 u16Channel)
             __FUNCTION__, __LINE__, enErrCode);
     }
 
+	
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -3809,6 +3821,7 @@ wvErrCode TSP_DelInputTSByChannel(U16 u16Channel)
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     enErrCode = TSP_StoreTSConfiguration();
     if (WV_SUCCESS != enErrCode)
@@ -3893,7 +3906,7 @@ wvErrCode TSP_GetDestInfo(U8 aru8DestSlot[], U32 aru32DestChannel[][8], U32 aru3
     U8 u8DestIndex = 0;
     U8 u8DestSlot = 0;
     U8 aru8BoardName[MAX_BOARD_NAME_LEN] = {0};
-    BOOL bHaveDestFlag = FALSE;
+    BOOL bHaveDestFlag = false;
     
     if ((!pstDest) || (!aru8DestSlot) || (!aru32DestChannel))
     {
@@ -3915,7 +3928,7 @@ wvErrCode TSP_GetDestInfo(U8 aru8DestSlot[], U32 aru32DestChannel[][8], U32 aru3
 
         pstDest->arstDestSlotInfo[pstDest->u8DestSlotNum].u8Slot = u8DestSlot;
 
-        bHaveDestFlag = FALSE;
+        bHaveDestFlag = false;
 
         for (i = 0; i < 8; i++)
         {
@@ -3930,7 +3943,7 @@ wvErrCode TSP_GetDestInfo(U8 aru8DestSlot[], U32 aru32DestChannel[][8], U32 aru3
 
             if (0 != aru32DestChannel[u8DestIndex][i])
             {
-                bHaveDestFlag = TRUE;
+                bHaveDestFlag = true;
             }
         }
 
@@ -4409,7 +4422,7 @@ wvErrCode TSP_AddDestSlot(DestInfo *pstDestInfo,
                 u16DestChannel:÷∏∂®µƒÕ®µ¿
                 pstParamTS
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4424,7 +4437,7 @@ BOOL TSP_IfInputProgOutputs2DestChannel(U16 u16InProgIndex, U8 u8DestSlot, U16 u
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InProgIndex[%u],u8DestSlot[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InProgIndex, u8DestSlot);
-        return FALSE;
+        return false;
     }
 
     enErrCode = TSP_GetDestIndex(u8DestSlot,
@@ -4436,7 +4449,7 @@ BOOL TSP_IfInputProgOutputs2DestChannel(U16 u16InProgIndex, U8 u8DestSlot, U16 u
         
         if (0 != (pu32DestChannel[u16DestChannel / 32] & (0x1 << (u16DestChannel % 32))))
         {
-            return TRUE;
+            return true;
         }
     }
     else if (WV_ERR_TSP_NOT_EXIST != enErrCode)
@@ -4446,7 +4459,7 @@ BOOL TSP_IfInputProgOutputs2DestChannel(U16 u16InProgIndex, U8 u8DestSlot, U16 u
             __FUNCTION__, __LINE__, enErrCode);
     }
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4457,7 +4470,7 @@ BOOL TSP_IfInputProgOutputs2DestChannel(U16 u16InProgIndex, U8 u8DestSlot, U16 u
                 u16DestChannel:÷∏∂®µƒÕ®µ¿
                 pstParamTS
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4472,7 +4485,7 @@ BOOL TSP_IfInputTSOutputs2DestChannel(U16 u16InTSIndex, U8 u8DestSlot, U16 u16De
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InTSIndex[%u],u8DestSlot[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InTSIndex, u8DestSlot);
-        return FALSE;
+        return false;
     }
 
     enErrCode = TSP_GetDestIndex(u8DestSlot,
@@ -4484,7 +4497,7 @@ BOOL TSP_IfInputTSOutputs2DestChannel(U16 u16InTSIndex, U8 u8DestSlot, U16 u16De
         
         if (0 != (pu32DestChannel[u16DestChannel / 32] & (0x1 << (u16DestChannel % 32))))
         {
-            return TRUE;
+            return true;
         }
     }
     else if (WV_ERR_TSP_NOT_EXIST != enErrCode)
@@ -4494,7 +4507,7 @@ BOOL TSP_IfInputTSOutputs2DestChannel(U16 u16InTSIndex, U8 u8DestSlot, U16 u16De
             __FUNCTION__, __LINE__, enErrCode);
     }
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4504,7 +4517,7 @@ BOOL TSP_IfInputTSOutputs2DestChannel(U16 u16InTSIndex, U8 u8DestSlot, U16 u16De
                 u8DestSlot: ‰≥ˆ◊”∞Â≤€Œª∫≈
                 pstParamTS:
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4518,16 +4531,16 @@ BOOL TSP_IfInputProgOutputs2DestSlot(U16 u16InProgIndex, TSInfo *pstParamTS, U8 
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InProgIndex[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InProgIndex);
-        return FALSE;
+        return false;
     }
     
     enErrCode = TSP_GetDestIndex(u8DestSlot, pstParamTS->pInputProgram[u16InProgIndex].aru8DestSlot, &u8DestIndex);
     if (WV_SUCCESS == enErrCode)
     {
-        return TRUE;
+        return true;
     }
     
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4537,7 +4550,7 @@ BOOL TSP_IfInputProgOutputs2DestSlot(U16 u16InProgIndex, TSInfo *pstParamTS, U8 
                 u8DestSlot: ‰≥ˆ◊”∞Â≤€Œª∫≈
                 pstParamTS:
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4551,16 +4564,16 @@ BOOL TSP_IfInputTSOutputs2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8De
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InTSIndex[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InTSIndex);
-        return FALSE;
+        return false;
     }
 
     enErrCode = TSP_GetDestIndex(u8DestSlot, pstParamTS->pInputTS[u16InTSIndex].aru8DestSlot, &u8DestIndex);
     if (WV_SUCCESS == enErrCode)
     {
-        return TRUE;
+        return true;
     }
     
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4570,7 +4583,7 @@ BOOL TSP_IfInputTSOutputs2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8De
                 u8DestSlot: ‰≥ˆ◊”∞Â≤€Œª∫≈
                 pstParamTS:
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4588,13 +4601,13 @@ BOOL TSP_IfInputTSBypasses2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8D
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InTSIndex[%u],u8DestSlot[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InTSIndex, u8DestSlot);
-        return FALSE;
+        return false;
     }
 
     enErrCode = TSP_GetDestIndex(u8DestSlot, pstParamTS->pInputTS[u16InTSIndex].aru8DestSlot, &u8DestIndex);
     if (WV_SUCCESS != enErrCode)
     {
-        return FALSE;
+        return false;
     }
 
     pu32DestChannel = pstParamTS->pInputTS[u16InTSIndex].aru32DestChannel[u8DestIndex];
@@ -4605,11 +4618,11 @@ BOOL TSP_IfInputTSBypasses2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8D
         if ((0 != (pu32DestChannel[i / 32] & (0x1 << (i % 32))))
             && (0 != (pu32BypassFlag[i / 32] & (0x1 << (i % 32)))))
         {
-            return TRUE;
+            return true;
         }
     }
     
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4619,7 +4632,7 @@ BOOL TSP_IfInputTSBypasses2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8D
                 u8DestSlot: ‰≥ˆ◊”∞Â≤€Œª∫≈
                 pstParamTS:
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4637,13 +4650,13 @@ BOOL TSP_IfInputTSMuxes2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8Dest
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InTSIndex[%u],u8DestSlot[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u16InTSIndex, u8DestSlot);
-        return FALSE;
+        return false;
     }
 
     enErrCode = TSP_GetDestIndex(u8DestSlot, pstParamTS->pInputTS[u16InTSIndex].aru8DestSlot, &u8DestIndex);
     if (WV_SUCCESS != enErrCode)
     {
-        return FALSE;
+        return false;
     }
 
     pu32DestChannel = pstParamTS->pInputTS[u16InTSIndex].aru32DestChannel[u8DestIndex];
@@ -4654,11 +4667,11 @@ BOOL TSP_IfInputTSMuxes2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8Dest
         if ((0 != (pu32DestChannel[i / 32] & (0x1 << (i % 32))))
             && (0 == (pu32BypassFlag[i / 32] & (0x1 << (i % 32)))))
         {
-            return TRUE;
+            return true;
         }
     }
     
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -4667,7 +4680,7 @@ BOOL TSP_IfInputTSMuxes2DestSlot(U16 u16InTSIndex, TSInfo *pstParamTS, U8 u8Dest
                 u8DestSlot: ‰≥ˆ◊”∞Â≤€Œª∫≈
                 pstParamTS:
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -4685,7 +4698,7 @@ BOOL TSP_IsThereAnyPIDThatOutputs2DestSlot(U8 u8DestSlot, TSInfo *pstParamTS)
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u8DestSlot[%u]\r\n",
             __FUNCTION__, __LINE__, pstParamTS, u8DestSlot);
-        return FALSE;
+        return false;
     }
 
     for (u16Channel = 0; u16Channel < MAX_INPUT_CHANNEL_NUM; u16Channel++)
@@ -4700,12 +4713,12 @@ BOOL TSP_IsThereAnyPIDThatOutputs2DestSlot(U8 u8DestSlot, TSInfo *pstParamTS)
             log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
                 "[%s:%d]TSP_GetDestInfo Error:enErrCode[%08X]\r\n",
                 __FUNCTION__, __LINE__, enErrCode);
-            return FALSE;
+            return false;
         }
 
         if (TSP_IfInputTSOutputs2DestSlot(u16InTSIndex, pstParamTS, u8DestSlot))
         {
-            return TRUE;
+            return true;
         }
         
         stIndexList.u16IndexListNum = 0;
@@ -4715,19 +4728,19 @@ BOOL TSP_IsThereAnyPIDThatOutputs2DestSlot(U8 u8DestSlot, TSInfo *pstParamTS)
             log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
                 "[%s:%d]TSP_GetInTSProgIndexList Error:enErrCode[%08X]\r\n",
                 __FUNCTION__, __LINE__, enErrCode);
-            return FALSE;
+            return false;
         }
 
         for (i = 0; i < stIndexList.u16IndexListNum; i++)
         {
             if (TSP_IfInputProgOutputs2DestSlot(stIndexList.aru16IndexList[i], pstParamTS, u8DestSlot))
             {
-                return TRUE;
+                return true;
             }
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -5803,11 +5816,11 @@ wvErrCode TSP_AddTSToOutputBoard(U16 u16InTSIndex, TSInfo *pstParamTS, Dest *pst
 
                 if (0 == (u32TempBypassFlag & (0x1 << k)))
                 {
-                    aru8BypassFlag[u16DestChannelNum] = FALSE;
+                    aru8BypassFlag[u16DestChannelNum] = false;
                 }
                 else
                 {
-                    aru8BypassFlag[u16DestChannelNum] = TRUE;
+                    aru8BypassFlag[u16DestChannelNum] = true;
                 }
 
                 aru16DestChannel[u16DestChannelNum++] = j * 32 + k;
@@ -6040,10 +6053,10 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
     U32 u32OldChannel = 0;
     U32 u32NewChannel = 0;
     U32 u32NewBypassFlag = 0;
-    BOOL bBypassFlag = FALSE;
+    BOOL bBypassFlag = false;
 
-    BOOL bDelFlag = FALSE;
-    BOOL bAddFlag = FALSE;
+    BOOL bDelFlag = false;
+    BOOL bAddFlag = false;
 
     U8 u8TempDestSlotIndex = 0;
 
@@ -6099,7 +6112,7 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
             return enErrCode;
         }
 
-        bDelFlag = FALSE;
+        bDelFlag = false;
 
         //‘⁄–¬µƒ»•œÚ–≈œ¢÷–’“µΩ¡À∂‘”¶µƒDestSlot£¨ªπ–Ë“™∂‘±»–¬æ…µƒChannel£¨»∑∂®“™…æ≥˝ƒƒ–©Õ®µ¿
         for (j = 0; j < 8; j++)
@@ -6135,7 +6148,7 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
 
                 //º«¬º…æ≥˝¡Àƒƒ∏ˆÕ®µ¿
                 pstDelDest->arstDestSlotInfo[pstDelDest->u8DestSlotNum].aru32Channel[j] |= 0x1 << k;
-                bDelFlag = TRUE;
+                bDelFlag = true;
             }
         }
 
@@ -6247,7 +6260,7 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
             return enErrCode;
         }
 
-        bAddFlag = FALSE;
+        bAddFlag = false;
 
         //‘⁄æ…µƒ»•œÚ–≈œ¢÷–’“µΩ¡À∂‘”¶µƒDestSlot£¨ªπ–Ë“™∂‘±»–¬æ…µƒChannel£¨»∑∂®“™‘ˆº”ƒƒ–©Õ®µ¿
         for (j = 0; j < 8; j++)
@@ -6269,7 +6282,7 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
                     continue;
                 }
 
-                bBypassFlag = (0 == (u32NewBypassFlag & (0x1 << k))) ? FALSE : TRUE;
+                bBypassFlag = (0 == (u32NewBypassFlag & (0x1 << k))) ? false : true;
 
                 enErrCode = TSP_AddDestChannel(u8DestSlot,
                                                 j * 32 + k,
@@ -6294,7 +6307,7 @@ wvErrCode TSP_ProcessDest(Dest *pstOldDest,
                     pstAddDest->arstDestSlotInfo[pstAddDest->u8DestSlotNum].aru32BypassFlag[j] |= 0x1 << k;
                 }
                 
-                bAddFlag = TRUE;
+                bAddFlag = true;
             }
         }
 
@@ -6513,7 +6526,7 @@ TSP_ERROR:
   Input:        u16InProgIndex: ‰»ÎΩ⁄ƒøÀ˜“˝
                 pstParamTS
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -6526,12 +6539,12 @@ BOOL TSP_IsProgSet2BeDescrambled(U16 u16InProgIndex, TSInfo *pstParamTS)
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstParamTS[%p],u16InProgIndex[%u]\r\n",
             __FUNCTION__, __LINE__,pstParamTS, u16InProgIndex);
-        return FALSE;
+        return false;
     }
 
     u8CAMIndex = pstParamTS->pInputProgram[u16InProgIndex].u8CAMIndex;
 
-    return (u8CAMIndex < WVCI_MAX_SLOT_NUM) ? TRUE : FALSE;
+    return (u8CAMIndex < WVCI_MAX_SLOT_NUM) ? true : false;
 }
 
 /*****************************************************************************
@@ -7191,6 +7204,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
     }
 
 	//ËÆæÁΩÆËæìÂá∫LUT
+	/*
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7198,6 +7212,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
 	return WV_SUCCESS;
 
@@ -7316,7 +7331,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
     }
 
 
-    enErrCode = TSP_SendDescrambledProg2OutputBoard(FALSE, &stUnsetProgList, pstParamTS);
+    enErrCode = TSP_SendDescrambledProg2OutputBoard(false, &stUnsetProgList, pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
@@ -7380,7 +7395,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
         }
     }
 
-    enErrCode = TSP_SendDescrambledProg2OutputBoard(TRUE, &stSetProgList, pstParamTS);
+    enErrCode = TSP_SendDescrambledProg2OutputBoard(true, &stSetProgList, pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
@@ -7411,6 +7426,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
     }
 
 	//ËøôÊòØÂπ≤Âòõ
+	/*
     enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7421,6 +7437,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
 
 
 	//ËÆæÁΩÆËæìÂá∫LUT
+	
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -7428,6 +7445,7 @@ wvErrCode TSP_ProcessDescramble(DescrambleProgInfo arstDescrambleProgInfoList[],
             "[%s:%d]TSP_SetInputLUT Error:enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, enErrCode);
     }
+    */
 
     //(void)WVCI_UpdateSetting(ALL_SLOTS);
 
@@ -7527,6 +7545,9 @@ wvErrCode TSP_SetInputLUTIPInfo(U8 u8LUTIndex, U32 u32IP, U16 u16UDPPort, U8 aru
     FPGA_REG_Write(TSIP_CPU_WREN, 0);
     FPGA_REG_Write(TSIP_CPU_WREN, 1);
     FPGA_REG_Write(TSIP_CPU_WREN, 0);
+
+	//Â∞ÜipÂú∞ÂùÄÊò†Â∞Ñ‰∏∫mac
+	LUT_MultiIpMapMAC(u32IP, aru8MAC);
 
     u32MACH = (aru8MAC[0] << 24) | (aru8MAC[1] << 16) | (aru8MAC[2] << 8) | aru8MAC[3];
     u16MACL = (aru8MAC[4] << 8) | aru8MAC[5]; 
@@ -7635,18 +7656,18 @@ BOOL TSP_IsInputLUTEntryAlreadyExist(INPUTLutEntry *pstEntry, INPUTLutEntry arst
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstEntry[%p],arstLUTEntry[%p],u16EntryNum[%u]\r\n",
             __FUNCTION__, __LINE__, pstEntry, arstLUTEntry, u16EntryNum);
-        return FALSE;
+        return false;
     }
 
     for (i = 0; i < u16EntryNum; i++)
     {
         if (0 == memcmp(pstEntry, &arstLUTEntry[i], sizeof(INPUTLutEntry)))
         {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 wvErrCode TSP_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry arstLUTEntry[MAX_INPUT_LUT_ENTRY_NUM], U16 *pu16EntryNum)
@@ -7669,7 +7690,7 @@ wvErrCode TSP_GetInputLUTEntry(U8 u8DestSlot, TSInfo *pstParamTS, INPUTLutEntry 
     INPUTLutEntry stTempEntry;
     U8 u8CamIndex = 0;
     U16 u16Channel = 0;
-    BOOL bInputTSMux2DestSlotFlag = FALSE;
+    BOOL bInputTSMux2DestSlotFlag = false;
     
     if ((!pstParamTS) || (!arstLUTEntry) || (!pu16EntryNum))
     {
@@ -8207,12 +8228,12 @@ BOOL TSP_IsCINeed2Mux2DestSlot(U8 u8CamIndex, U8 u8DestSlot, TSInfo *pstParamTS)
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:u8CamIndex[%u],pstParamTS[%p]\r\n",
             __FUNCTION__, __LINE__, u8CamIndex, pstParamTS);
-        return FALSE;
+        return false;
     }
     
     if (WV_SUCCESS != TSP_GetOutputTSIndex(u8CamIndex, pstParamTS, &u16OutTSIndex))
     {
-        return FALSE;
+        return false;
     }
 
     stProgIndexList.u16IndexListNum = 0;
@@ -8222,7 +8243,7 @@ BOOL TSP_IsCINeed2Mux2DestSlot(U8 u8CamIndex, U8 u8DestSlot, TSInfo *pstParamTS)
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]TSP_GetOutTSProgIndexList Error:u16OutTSIndex[%u],enErrCode[%08X]\r\n",
             __FUNCTION__, __LINE__, u16OutTSIndex, enErrCode);
-        return FALSE;
+        return false;
     }
 
     for (i = 0; i < stProgIndexList.u16IndexListNum; i++)
@@ -8235,11 +8256,11 @@ BOOL TSP_IsCINeed2Mux2DestSlot(U8 u8CamIndex, U8 u8DestSlot, TSInfo *pstParamTS)
         if (TSP_IfInputProgOutputs2DestSlot(u16SrcProgIndex, pstParamTS, u8DestSlot)
             || TSP_IfInputTSMuxes2DestSlot(u16SrcTSIndex, pstParamTS, u8DestSlot))
         {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************
@@ -8264,10 +8285,10 @@ wvErrCode TSP_GetBypassAndMuxFlagOfInputTS(U8 u8DestSlot,
     wvErrCode enErrCode = WV_SUCCESS;
     U16 i = 0;
     IndexInfoList stIndexList;
-    BOOL bBypassFlag = FALSE;
-    BOOL bMUXFlag = FALSE;
-    BOOL bTSMuxFlag = FALSE;
-    BOOL bProgMuxFlag = FALSE;
+    BOOL bBypassFlag = false;
+    BOOL bMUXFlag = false;
+    BOOL bTSMuxFlag = false;
+    BOOL bProgMuxFlag = false;
 
     U16 u16InProgIndex = INDEX_INVALID_VALUE;
     
@@ -8304,7 +8325,7 @@ wvErrCode TSP_GetBypassAndMuxFlagOfInputTS(U8 u8DestSlot,
         
         if ((bTSMuxFlag || bProgMuxFlag) && (!TSP_IsProgSet2BeDescrambled(u16InProgIndex, pstParamTS)))
         {
-            bMUXFlag = TRUE;
+            bMUXFlag = true;
             break;
         }
     }
@@ -8333,8 +8354,8 @@ wvErrCode TSP_SetBypassAndMUXFlag(TSInfo *pstParamTS)
     U8 u8DestSlot = MAX_SLOT_NUM;
     U16 u16StreamID = 0;
     U16 u16InTSIndex = INDEX_INVALID_VALUE;
-    BOOL bBypassFlag = FALSE;
-    BOOL bMUXFlag = FALSE;
+    BOOL bBypassFlag = false;
+    BOOL bMUXFlag = false;
 
     if (!pstParamTS)
     {
@@ -8356,8 +8377,8 @@ wvErrCode TSP_SetBypassAndMUXFlag(TSInfo *pstParamTS)
 
         for (i = 0; i < MAX_INPUT_CHANNEL_NUM; i++)
         {
-            bBypassFlag = FALSE;
-            bMUXFlag = FALSE;
+            bBypassFlag = false;
+            bMUXFlag = false;
 
             u16StreamID = TSP_InputChannel2StreamID(i);
 
@@ -8371,8 +8392,8 @@ wvErrCode TSP_SetBypassAndMUXFlag(TSInfo *pstParamTS)
                         "[%s:%d]TSP_GetInputTSBypassAndMuxFlag error,enErrCode[%08X]\r\n",
                         __FUNCTION__, __LINE__, enErrCode);
                     
-                    bBypassFlag = FALSE;
-                    bMUXFlag = FALSE;
+                    bBypassFlag = false;
+                    bMUXFlag = false;
                 }
             }
             
@@ -8566,6 +8587,7 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
     IndexInfoList stProgIndexList;
     pstParamTS = TSP_GetTSParamHandle();
 
+	/*
     TSP_BypassAllTS2CIOutput();
     
     enErrCode = TSP_ConstructSITableOfCIOutput(pstParamTS);
@@ -8576,6 +8598,7 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
             __FUNCTION__, __LINE__, enErrCode);
         return enErrCode;
     }
+    */
 
     for (u16InTSIndex = 0; u16InTSIndex < pstParamTS->u32InputTSNumber; u16InTSIndex++)
     {
@@ -8618,6 +8641,7 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
         }
     }
 
+	/*
     enErrCode = TSP_SetCIOutputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -8635,7 +8659,9 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
             __FUNCTION__, __LINE__, enErrCode);
         return enErrCode;
     }
+    */
 
+	/*
     enErrCode = TSP_SetInputLUT(pstParamTS);
     if (WV_SUCCESS != enErrCode)
     {
@@ -8644,8 +8670,28 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
             __FUNCTION__, __LINE__, enErrCode);
         return enErrCode;
     }
+    */
 
-    WVCI_UpdateSetting(ALL_SLOTS);
+	//ÈÄâÊã©ËæìÂá∫ÊµÅÂè∑
+	for(i = 0; i < WVCI_MAX_SLOT_NUM; ++i)
+	{
+		LUT_OpenStream(i, TSP_InputChannel2StreamID(i));
+	}
+
+	//TODO
+	//ËÆæÁΩÆËæìÂá∫ÂíåÁ´ØÂè£
+    for (i = 0; i < MAX_INPUT_LUT_NUM; i++)
+    {		
+		ParamsInfoPtr pstParamsInfo = WebXml_GetParamsInfoPtr(i);
+	
+		//ËÆæÁΩÆËæìÂá∫ÁöÑIP „ÄÅÁ´ØÂè£„ÄÅMAC
+		LUT_SetInputLUTIPInfo(i, pstParamsInfo->u32TsIpAddr, pstParamsInfo->u16TsPort);
+    }
+
+	for(i = 0; i < WVCI_MAX_SLOT_NUM; ++i)
+	{
+		WVCI_UpdateSetting(i);
+	}
 
     return WV_SUCCESS;
 }
@@ -8655,7 +8701,7 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
   Description:  ≈–∂œ¡˜ «∑Ò±ª«Âø’¡À£¨»Ù±ª«Âø’∫Û“™÷ÿ–¬À—Ã®
   Input:        u8Channel
   Output:       
-  Return:       TRUE or FALSE
+  Return:       true or false
   Others:       
   Create:       Momouwei 2017.02.23
 *****************************************************************************/
@@ -8663,15 +8709,35 @@ BOOL TSP_IsClearTS(U8 u8Channel)
 {
     if (MAX_INPUT_CHANNEL_NUM <= u8Channel)
     {
-        return FALSE;
+        return false;
     }
 
     if (0 == s_aru8ClearTSFlag[u8Channel])
     {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
+}
+
+
+bool TSP_IsFirstScanTS(U8 u8Channel)
+{
+	static U8 aru8Count[MAX_INPUT_CHANNEL_NUM] = {0};
+
+	bool ret = false;
+
+	if(aru8Count[u8Channel])
+	{
+		ret = false;
+	}
+	else
+	{
+		ret = true;
+		aru8Count[u8Channel] = 1;
+	}
+
+	return ret;
 }
 
 /*****************************************************************************
@@ -12861,18 +12927,18 @@ BOOL TSP_IsCIOutputLUTEntryAlreadyExist(OUTPUTLUTEntry *pstEntry, OUTPUTLUTEntry
         log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
             "[%s:%d]Input Error:pstEntry[%p],arstLUTEntry[%p],u16EntryNum[%u]\r\n",
             __FUNCTION__, __LINE__, pstEntry, arstLUTEntry, u16EntryNum);
-        return FALSE;
+        return false;
     }
 
     for (i = 0; i < u16EntryNum; i++)
     {
         if (0 == memcmp(pstEntry, &arstLUTEntry[i], sizeof(OUTPUTLUTEntry)))
         {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 /*****************************************************************************

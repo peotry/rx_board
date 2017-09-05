@@ -14,10 +14,18 @@
 #ifndef WV_ERR_H
 #define WV_ERR_H
 
-#define MAX_ERR_INFO_LEN    100
-#define MAX_LANGUAGE_NUM    5
-#define MAX_ERR_CODE_NUM    1024
+
+#include <errno.h>
+#include <string.h>
+
+#define ERR_BUF_LEN         (256)
+#define MAX_ERR_INFO_LEN    (150)
+#define MAX_LANGUAGE_NUM    (5)
+#define MAX_ERR_CODE_NUM    (1024)
 #define INVALID_ERRCODE     0xFFFFFFFF
+
+
+#define ERR_STRING(err_buf)    strerror_r(errno, err_buf, sizeof(err_buf))
 
 /* language menu */
 typedef enum{
@@ -49,6 +57,12 @@ typedef enum{
     WV_ERR_TEMPERATURE              = 0x11,     // 设备温度过高
     WV_ERR_TAR_UPGRADE_FILE_ERROR   = 0x12,     // 解压升级文件失败
     WV_ERR_LIC_EXPIRED              = 0x13,     // 授权过期
+    WV_ERR_CMD_POPEN                = 0x14,     // 管道命令打开失败
+    WV_ERR_PONIT_OUT_RANGE          = 0x15,     // 指针超过范围
+    WV_ERR_FILE_CREAT               = 0x16,     // 文件创建失败
+    WV_ERR_HWDES_NOT_FOUND          = 0x17,     // 找不到硬件版本信息的描述
+    WV_ERR_PARAMS_FILE_WRITE        = 0x18,     // 参数文件写入错误
+    WV_ERR_PARAMS_FILE_TAR          = 0x19,     // 参数文件解压错误
 
     //encoder
     PE_ENCODER_NORMAL               = 0x201,
@@ -123,11 +137,19 @@ typedef enum{
     WV_ERR_TSP_PID_CONFLICT                   = 0x80B,    //pid冲突
 
     
+    WV_ERR_SIP_ERROR_OUT_OF_RANGE             = 0x903,    //数组越界
     //PSI
     WV_ERR_SIP_ERROR_BAD_PARAM                = 0x902,    //输入参数错误
-    WV_ERR_SIP_ERROR_OUT_OF_RANGE             = 0x903,    //数组越界
+    //net
+    WV_ERR_SOCKET_OPEN             = 0xA01,
+    WV_ERR_SOCKET_BIND             = 0xA02,
+    WV_ERR_SOCKET_SEND             = 0xA03,
+    WV_ERR_SOCKET_RECV             = 0xA04,
+    WV_ERR_SOCKET_SETOPT           = 0xA05,
+    WV_ERR_SOCKET_IPADDR           = 0xA06,
 
     // to add
+    
 }wvErrCode;
 
 

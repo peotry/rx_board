@@ -4,13 +4,27 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <errno.h>
+
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
+#include <unistd.h>
+#include <string.h>
+
+
 #include "upgrade.h"
 //#include "system.h"
 #include "appGlobal.h"
 #include "WV_log.h"
 #include "tools.h"
 
+#include "net/udp.h"
+#include "thread/thread.h"
+
 bool g_isUpgrading = false;
+
+static UPGRADE_STATUS s_emUpgradeStatus = UPGRADE_STATUS_NONE;
 
 /*****************************************************************************
   Function:     upgrade_CheckUpgrade
@@ -394,20 +408,6 @@ wvErrCode upgrade_UpgradeSystem(const U8 * u8UpgradeFileName)
         LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Upgrade file name :[%s]!\n", u8UpgradeFileName);
     }
 
-#if 0
-    /* 去掉网络头 */
-    enRet = upgrade_DelNetHeader(u8UpgradeFileName);
-    if(WV_SUCCESS != enRet)
-    {
-        LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Del net-header ret: %d!\n", enRet);
-        goto upgrade_out;
-    }
-    else
-    {
-        LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Del net-header ret: %d!\n", enRet);
-    }
-#endif
-
     /* 校验升级 */
     enRet = upgrade_CheckUpgrade(u8UpgradeFileName);
     if(WV_SUCCESS != enRet)
@@ -474,5 +474,186 @@ wvErrCode upgrade_RecieveFile(const U8 * fileData, U32 u32Datalen)
     return WV_SUCCESS;
 }
 
+
+static UpgradeInfo s_stUpgradeInfo;
+
+#define UPGRADE_SERVER_PORT (6666)
+#define UPGRADE_FILE_NAME   ("/var/volatile/upgradefile")
+
+
+wvErrCode Upgrade_WriteRawDataToFile(void * pData, int data_len, const char * file_name)
+{
+	if(!file_name)
+	{
+		LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Error: param = NULL");
+		return WV_ERR_PARAMS;
+	}
+
+	FILE *fp = NULL;
+	wvErrCode ret = WV_SUCCESS;
+
+	fp = fopen(file_name, "w+");
+    if(NULL == fp)
+    {
+    	printf("Upgrade file [%s] re-open fail!\n", file_name);
+        return WV_ERR_FILE_NOT_EXISTING;
+    }
+
+  
+    printf("u32Datalen %d\r\n", data_len);
+    fwrite(pData, 1, data_len, fp);
+
+    fclose(fp);
+
+	return WV_SUCCESS;
+}
+
+
+void * Upgrade_Recvfile(void *arg)
+{
+	S32 sockfd = *((int *)arg);
+	U8 recv_buf[1536] = {0};
+	U8 send_buf[1536] = {0};
+	S32 num = 0;
+	U8 u8Cmd = 0;
+	void *p_Data = NULL;
+	
+	bool isUpgrade = false;
+	char err_buf[ERR_BUF_LEN] = {0};
+	U32 u32Offset = 0;
+	
+	while(1)
+	{
+		if((num = read(sockfd, recv_buf, sizeof(recv_buf))) <= 0)
+		{
+			if((EINTR == errno) && (num < 0))
+			{
+				LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Error: call accept failed by EINTR!");
+				continue;
+			}
+			else if(num < 0)
+			{
+				ERR_STRING(err_buf);
+				LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Error: call read: %s!", err_buf);
+			}
+			else 
+			{
+				//connection close
+				CLOSE(sockfd);
+				break;
+			}
+		}
+
+		//申请空间		
+		if(!isUpgrade)
+		{
+			isUpgrade = true;
+			p_Data = malloc(UPGRADE_FILE_SIZE);
+			if(!p_Data)
+			{
+				ERR_STRING(err_buf);
+				LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Error: call malloc faild!");
+				goto err;
+			}
+			LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Upgrade start ...");
+		}
+
+		memcpy(p_Data + u32Offset, recv_buf, num);
+		u32Offset += num;
+		
+	}
+
+	//将数据写入文件
+	Upgrade_WriteRawDataToFile(p_Data, u32Offset, UPGRADE_FILE_NAME);
+	FREE(p_Data);
+	
+	upgrade_UpgradeSystem(UPGRADE_FILE_NAME);
+	CLOSE(sockfd);
+
+	LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Upgrade Successfully!");
+	
+	return NULL;
+
+	err:
+		LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Error: Upgrade Failed!");
+		CLOSE(sockfd);
+		return NULL;
+	
+}
+
+
+void Upgrade_HandleSocketConnect(int sockfd)
+{
+	int num = 0;
+	char recv_buf[1024] = {0};
+	
+	while((num = read(sockfd, recv_buf, sizeof(recv_buf))) > 0)
+	{
+		printf("num = %d, %s\n", num, recv_buf);
+	}
+
+	printf("close sockfd\n");
+}
+
+void * Upgrade_Server(void *arg)
+{
+	int sockfd = -1;
+	int connfd = -1;
+    struct sockaddr_in ser_addr;
+	char err_buf[ERR_BUF_LEN] = {0};
+
+    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        ERR_STRING(err_buf);
+		LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Error: call socket %s!", err_buf);
+
+		return NULL;
+    }
+
+    bzero(&ser_addr, sizeof(ser_addr));
+    ser_addr.sin_family = AF_INET;
+    ser_addr.sin_port = htons(6666);
+    ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    bind(sockfd, &ser_addr, sizeof(ser_addr));
+
+    listen(sockfd, 128);
+
+	while(1)
+    {
+        connfd = accept(sockfd, (struct sockaddr *)NULL, NULL);
+		if(connfd < 0)
+		{
+			if(EINTR == errno)
+			{
+				LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Error: call accept failed by EINTR!");
+				continue;
+			}
+			else
+			{
+				ERR_STRING(err_buf);
+				LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_SYS, "Error: call accept %s!", err_buf);
+				continue;
+			}
+		}
+        
+        THREAD_NEW_DETACH(Upgrade_Recvfile, &connfd, "Upgrade_Recvfile");
+		sleep(2);
+    }
+
+	return NULL;
+}
+
+
+
+UPGRADE_STATUS Upgrade_GetUpgradeStatus(void)
+{
+	return s_emUpgradeStatus;
+}
+
+void Upgrade_SetUpgradeStatus(UPGRADE_STATUS emUpgradeStatus)
+{
+	s_emUpgradeStatus = emUpgradeStatus;
+}
 
 

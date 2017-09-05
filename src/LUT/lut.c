@@ -22,18 +22,82 @@
 #include "FPGA.h"
 
 
-wvErrCode LUT_SetInputLUTIPInfo(U8 u8LUTIndex, U32 u32IP, U16 u16UDPPort, U8 aru8MAC[6])
+wvErrCode LUT_MultiIpMapMAC(const U32 u32IP, U8 aru8MAC[6])
 {
-	wvErrCode ret = TSP_SetInputLUTIPInfo(u8LUTIndex, u32IP, u16UDPPort, aru8MAC);
+	//多播MAC地址中的高25位是固定的，低23位是可变的。
+	aru8MAC[0] = 0x01;
+	aru8MAC[1] = 0;
+	aru8MAC[2] = 0x5E;
+
+	aru8MAC[3] = ((u32IP >> 16) & 0xef);
+	aru8MAC[4] = ((u32IP >> 8) & 0xff);
+	aru8MAC[5] = (u32IP & 0xff);
+	
+	return WV_SUCCESS;
+}
+
+wvErrCode LUT_SetInputLUTIPInfo(U8 u8LUTIndex, U32 u32IP, U16 u16UDPPort)
+{
+	U32 u32MACH = 0;
+    U16 u16MACL = 0;
+	U8 aru8MAC[6] = {0};
+    
+    if ((MAX_INPUT_LUT_NUM <= u8LUTIndex) || (!aru8MAC))
+    {
+        log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
+            "[%s:%d]Input Error:u8LUTIndex[%u],aru8MAC[%p]\r\n",
+            __FUNCTION__, __LINE__, u8LUTIndex, aru8MAC);
+        return WV_ERR_TSP_INPUT_PARAM;
+    }
+
+    FPGA_REG_Write(TSIP_CPU_ADDR, (0x1 << 9) | u8LUTIndex);
+    FPGA_REG_Write(TSIP_DAT_H, 0);
+    FPGA_REG_Write(TSIP_DAT_L, u32IP);
+    FPGA_REG_Write(TSIP_CPU_WREN, 0);
+    FPGA_REG_Write(TSIP_CPU_WREN, 1);
+    FPGA_REG_Write(TSIP_CPU_WREN, 0);
+
+	//将ip地址映射为mac
+	LUT_MultiIpMapMAC(u32IP, aru8MAC);
+
+    u32MACH = (aru8MAC[0] << 24) | (aru8MAC[1] << 16) | (aru8MAC[2] << 8) | aru8MAC[3];
+    u16MACL = (aru8MAC[4] << 8) | aru8MAC[5]; 
+
+    FPGA_REG_Write(TSIP_CPU_ADDR, (0x1 << 9) | (0x1 << 8) | u8LUTIndex);
+    FPGA_REG_Write(TSIP_DAT_H, u32MACH);
+    FPGA_REG_Write(TSIP_DAT_L, (u16MACL << 16) | u16UDPPort);
+    FPGA_REG_Write(TSIP_CPU_WREN, 0);
+    FPGA_REG_Write(TSIP_CPU_WREN, 1);
+    FPGA_REG_Write(TSIP_CPU_WREN, 0);
+
+    return WV_SUCCESS;
+}
+
+
+wvErrCode LUT_OpenStream(U8 u8LUTIndex, U8 u8StreamID)
+{
+	wvErrCode ret = WV_SUCCESS;
+
+	FPGA_REG_Write(LUT_ADDR, ((u8LUTIndex << 12) | (0x1 << 11) | u8StreamID));
+	FPGA_REG_Write(LUT_DATA, 3);
+	FPGA_REG_Write(LUT_WRITE_EN, 0);
+	FPGA_REG_Write(LUT_WRITE_EN, 1);
+	FPGA_REG_Write(LUT_WRITE_EN, 0);
 
 	return ret;
 }
 
-wvErrCode LUT_SetStreamID2LUT(U8 u8LUTIndex, U8 u8StreamID)
+wvErrCode LUT_CloseStream(U8 u8LUTIndex, U8 u8StreamID)
 {
 	wvErrCode ret = WV_SUCCESS;
 
-	
+	FPGA_REG_Write(LUT_ADDR, ((u8LUTIndex << 12) | (0x1 << 11) | u8StreamID));
+	FPGA_REG_Write(LUT_DATA, 0);
+	FPGA_REG_Write(LUT_WRITE_EN, 0);
+	FPGA_REG_Write(LUT_WRITE_EN, 1);
+	FPGA_REG_Write(LUT_WRITE_EN, 0);
+
+	return ret;
 }
 
 
@@ -403,7 +467,7 @@ wvErrCode LUT_SetInputLUT(TSInfo *pstParamTS)
 		aru8MAC[5] = 0x5a + u8LUTIndex;
 
 		//设置输出的IP 、端口、MAC
-		enErrCode = LUT_SetInputLUTIPInfo(u8LUTIndex, u32IPAddr, u16UDPPort, aru8MAC);
+		enErrCode = LUT_SetInputLUTIPInfo(u8LUTIndex, u32IPAddr, u16UDPPort);
 		if (WV_SUCCESS != enErrCode) 
         {
             log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,

@@ -87,6 +87,22 @@ typedef enum{
     MAX_SLOT_NUM
 }SLOT_ID;
 
+#define CLOSE(fd)  {\
+    if(fd > 0) \
+    {\
+        close(fd);\
+        fd = -1;\
+    }\
+}
+
+#define FREE(ptr) {\
+	if(ptr)\
+	{\
+		free(ptr);\
+		ptr = NULL;\
+	}\
+}
+
 #define WEB_LOG(format, ...)    printf("[%s:%d] " format " \r\n", __FUNCTION__, __LINE__, ## __VA_ARGS__)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif/*APPGLOBAL_H_*/

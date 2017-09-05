@@ -529,15 +529,16 @@ void FPGA_setCiClk(U32 u32ClockValue)
 
 void FPGA_setCAMbypassOn(U8 u8Slot)
 {
-    U32 u32ReadVal = 0;
+	U32 u32ReadVal = 0;
     U32 u32Val = 0;
     u32Val = 0x1 << u8Slot;
 
     FPGA_REG_Read(CI_BYPASS, &u32ReadVal);
 
-    u32ReadVal |= u32Val;
+    u32ReadVal &= (~u32Val);
     
     FPGA_REG_Write(CI_BYPASS, u32ReadVal);
+
 }
 
 
@@ -549,7 +550,7 @@ void FPGA_setCAMbypassOff(U8 u8Slot)
 
     FPGA_REG_Read(CI_BYPASS, &u32ReadVal);
 
-    u32ReadVal &= (~u32Val);
+    u32ReadVal |= u32Val;
     
     FPGA_REG_Write(CI_BYPASS, u32ReadVal);
 }
