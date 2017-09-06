@@ -6,8 +6,8 @@
 
 //TODO 板子的标识，升级制作软件添加，防止不同的升级文件可以互相升级
 #define WV_UPGRADE_SYNC_FLAG    0x99999999
-#define WV_MACHINE_TYPE         CMP_MACHINE_TYPE
-#define WV_BOARD_TYPE           CMP_RECEIVER_C_S2
+#define WV_MACHINE_TYPE         MACHINE_TYPE
+#define WV_BOARD_TYPE           CR_DVBC
 
 #define WV_UPGRADE_FILE         "/var/upgrade.tar"
 #define WV_DEL_NET_FILE         "/var/delnetheader"

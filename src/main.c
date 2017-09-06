@@ -1,16 +1,3 @@
-/**********************************************************************
-* Copyright(c), 2017 WELLAV Technology Co.,Ltd.
-* All rights reserved.
-*
-* FileName ??main.c
-* Description ??the entry of app.
-* Author    : wei.li
-* Modified  :
-* Reviewer  :
-* Date      : 2017-02-21
-* Record    :
-*
-**********************************************************************/
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -60,23 +47,25 @@ U8 u8data[2800] = {0};
 
 extern BOOL g_isUpgrading;
 
-
-U32 OS_ThreadCreate(pthread_t *thread,void *(* thread_function)(void *))
+void Main_SetIpMac2FPGA(void)
 {
-    S32 state;
-    state = pthread_create(thread,NULL,thread_function,NULL);
-    if(state != 0)
-    {
-        return WV_ERR_FAILURE;
-    }
+	U32 u32SlotId = 0;
+	U32 u32IPAddr = 0;
+	char ip_str_base[16] = "192.168.1.100";
+	char ip_str_new[16] = {0};
+	char eth_name[16] = "eth0";
 
-    state = pthread_detach(*thread);
-    if(state != 0)
-    {
-         return WV_ERR_FAILURE;
-    }
-
-    return WV_SUCCESS;
+	//给每个槽位号设置固定IP，防止ip冲突
+	//eth0 无法动态获取IP
+	Net_SetIpAddr(eth_name, ip_str_base, sizeof(ip_str_base));
+	Net_GetIpAddr(eth_name, &u32IPAddr);
+	u32IPAddr += PIN_GetSlotID();
+	u32IPAddr = htonl(u32IPAddr);
+	inet_ntop(AF_INET, &u32IPAddr, ip_str_new, sizeof(ip_str_new));
+	Net_SetIpAddr(eth_name, ip_str_new, sizeof(ip_str_new));
+	
+	Net_SetIpAddr2FPGA(eth_name);
+	Net_SetMacAddr2FPGA(eth_name);
 }
 
 void test(void)
@@ -94,7 +83,7 @@ void test(void)
 	//sleep(2);
 	//Net_GetIpAddrStr("eth0", ip_str, sizeof(ip_str));
 	//Net_GetIpAddrStr("eth1", ip_str, sizeof(ip_str));
-
+#if 0
 	U32 u32CRC = Common_CRCCalculate("hello-world", 11, 0);
 	printf("%d\n", u32CRC);
 
@@ -117,8 +106,12 @@ void test(void)
 
 	//Net_SetIpAddr2FPGA("eth0");
 	//Net_SetMacAddr2FPGA("eth1");
+	#endif
+	
 
 	THREAD_NEW_DETACH(Upgrade_Server, NULL, "Upgrade_Server");
+
+	#if 0
 
 	Net_SetIpAddr("eth0", ip_str_base, sizeof(ip_str_base));
 	Net_GetIpAddr("eth0", &u32IPAddr);
@@ -135,6 +128,7 @@ void test(void)
 
 	//THREAD_NEW_DETACH(Report_BoardInfo, NULL, "Report_BoardInfo");
 	//THREAD_NEW_DETACH(Report_ChannelInfo, NULL, "Report_ChannelInfo");
+	#endif
 	
 	while(1)
 	{
@@ -145,13 +139,6 @@ void test(void)
 
 int main()
 {
-	printf("main func...\n");
-
-	U32 u32SlotId = 0;
-	U32 u32IPAddr = 0;
-	char ip_str_base[16] = "192.168.1.100";
-	char ip_str_new[16] = {0};
-	
     //初始化日志
     log_Init((U8 *)LOG_SAVE_FILE, LOG_SAVE_SIZE);
 
@@ -170,28 +157,18 @@ int main()
    	PIN_GetSlotID();
 
 	//自动获取ip
-	//Net_GetIpAddrWithDHCP("eth0");
 	Net_GetIpAddrWithDHCP("eth1");
 
 	//将网口0的ip和mac告诉FPGA
-	Net_SetIpAddr("eth0", ip_str_base, sizeof(ip_str_base));
-	Net_GetIpAddr("eth0", &u32IPAddr);
-	u32IPAddr += PIN_GetSlotID();
-	u32IPAddr = htonl(u32IPAddr);
-	inet_ntop(AF_INET, &u32IPAddr, ip_str_new, sizeof(ip_str_new));
-	printf("eth0: %s\n", ip_str_new);
-	Net_SetIpAddr("eth0", ip_str_new, sizeof(ip_str_new));
+	Main_SetIpMac2FPGA();
+
+	//Resource_Init(FPGA_GetSlotID());
 	
-	Net_SetIpAddr2FPGA("eth0");
-	Net_SetMacAddr2FPGA("eth0");
+	Resource_Init(0);
 
 	//初始化xml信息
-	WebXml_InitDeviceInfo();
-	WebXml_InitParamsInfo();
-	WebXml_InitProgramDecrypt();
+	WebXml_InitAll();
    
-    //Resource_Init(Status_GetSlotID());
-
 	//组播通道信息
 	THREAD_NEW_DETACH(Report_ChannelInfo, NULL, "Report_ChannelInfo");
 

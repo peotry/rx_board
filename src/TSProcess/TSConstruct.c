@@ -759,13 +759,17 @@ wvErrCode TSP_ClearTSConfiguration(TSInfo *pstParamTS)
     }
     */
 
-    enErrCode = WVCI_UpdateSetting(ALL_SLOTS);
-    if (WV_SUCCESS != enErrCode)
-    {
-        log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
-            "[%s:%d]WVCI_UpdateSetting Error:enErrCode[%08X]\r\n",
-            __FUNCTION__, __LINE__, enErrCode);
-    }
+	for (i = 0; i < MAX_INPUT_CHANNEL_NUM; i++)
+	{
+		enErrCode = WVCI_UpdateSetting(i);
+	
+	    if (WV_SUCCESS != enErrCode)
+	    {
+	        log_printf(LOG_LEVEL_ERROR, LOG_MODULE_TSP,
+	            "[%s:%d]WVCI_UpdateSetting Error:enErrCode[%08X]\r\n",
+	            __FUNCTION__, __LINE__, enErrCode);
+	    }
+	}
 
     enErrCode = TSP_StoreTSConfiguration();
     if (WV_SUCCESS != enErrCode)
@@ -781,6 +785,7 @@ wvErrCode TSP_ClearTSConfiguration(TSInfo *pstParamTS)
         TSP_SetClearTSFlag(i, true);
     }
 
+	/*
     for (i = 0; i < MAX_DEST; i++)
     {
         u8DestSlot = aru8DestSlotRecord[i];
@@ -800,6 +805,7 @@ wvErrCode TSP_ClearTSConfiguration(TSInfo *pstParamTS)
             continue;
         }
     }
+    */
 
     return WV_SUCCESS;
 }
@@ -3448,6 +3454,7 @@ wvErrCode TSP_DelInputPID(U16 u16InPIDIndex, TSInfo *pstParamTS)
         {
             pstParamTS->pInputProgram[u16SrcProgIndex].u16PCRIndex = INDEX_INVALID_VALUE;
             pstParamTS->pInputProgram[u16SrcProgIndex].u16PCRPID = INVALID_PID_VALUE;
+			break;
         }
         
         case PID_TYPE_EMMPID:
@@ -8587,19 +8594,6 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
     IndexInfoList stProgIndexList;
     pstParamTS = TSP_GetTSParamHandle();
 
-	/*
-    TSP_BypassAllTS2CIOutput();
-    
-    enErrCode = TSP_ConstructSITableOfCIOutput(pstParamTS);
-    if (WV_SUCCESS != enErrCode)
-    {
-        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP,
-            "[%s:%d]TSP_ConstructSITableOfCIOutput error,enErrCode[%08X]\r\n",
-            __FUNCTION__, __LINE__, enErrCode);
-        return enErrCode;
-    }
-    */
-
     for (u16InTSIndex = 0; u16InTSIndex < pstParamTS->u32InputTSNumber; u16InTSIndex++)
     {
         if (TSP_FLAG_VALID != pstParamTS->pInputTS[u16InTSIndex].u8ValidFlag)
@@ -8641,36 +8635,8 @@ wvErrCode  TSP_RestoreTSMUXInfo(void)
         }
     }
 
-	/*
-    enErrCode = TSP_SetCIOutputLUT(pstParamTS);
-    if (WV_SUCCESS != enErrCode)
-    {
-        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP,
-            "[%s:%d]TSP_SetCIOutputLUT error,enErrCode[%08X]\r\n",
-            __FUNCTION__, __LINE__, enErrCode);
-        return enErrCode;
-    }
-
-    enErrCode = TSP_SetBypassAndMUXFlag(pstParamTS);
-    if (WV_SUCCESS != enErrCode)
-    {
-        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP,
-            "[%s:%d]TSP_SetBypassAndMUXFlag error,enErrCode[%08X]\r\n",
-            __FUNCTION__, __LINE__, enErrCode);
-        return enErrCode;
-    }
-    */
-
-	/*
-    enErrCode = TSP_SetInputLUT(pstParamTS);
-    if (WV_SUCCESS != enErrCode)
-    {
-        log_printf(LOG_LEVEL_DEBUG, LOG_MODULE_TSP,
-            "[%s:%d]TSP_SetInputLUT error,enErrCode[%08X]\r\n",
-            __FUNCTION__, __LINE__, enErrCode);
-        return enErrCode;
-    }
-    */
+	//ts 流不带自定义包头
+	FPGA_REG_Write(0x135, 0);
 
 	//选择输出流号
 	for(i = 0; i < WVCI_MAX_SLOT_NUM; ++i)

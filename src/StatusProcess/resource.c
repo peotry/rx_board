@@ -49,6 +49,8 @@ U32 Resource_Init(U8 u8slot)
     U32 u32LogicVersionNum = 0;
     U32 u32HardwareVersionNum = 0;
 
+	printf("#################RESOUR SloT id = %u\n", u8slot);
+
     u32LogicVersionNum = FPGA_GetLogicVersion();
     u32HardwareVersionNum = PIN_GetHWVerSion();
 
@@ -59,7 +61,7 @@ U32 Resource_Init(U8 u8slot)
         case TUNER_DTMB:
         {
             s_stResource[u8slot].u8SlotID = u8slot;
-            s_stResource[u8slot].u8BoardType = CMP_RECEIVER_C_S2;
+            s_stResource[u8slot].u8BoardType = CR_DVBC;
             s_stResource[u8slot].u32SoftVersion = SW_VER;
             s_stResource[u8slot].u32LogicVersion = u32LogicVersionNum;
             s_stResource[u8slot].u32HardVersion = u32HardwareVersionNum;
@@ -250,7 +252,7 @@ void Resource_setBackBoardIpAddr(U32 u32Ipaddr)
 *****************************************************************************/
 BOOL Resource_IsOutputBoard(U8 u8BoardType)
 {
-    if ((CMP_QAM_16 == u8BoardType) || (CMP_BACKBOARD == u8BoardType))
+    //if ((CMP_QAM_16 == u8BoardType) || (CMP_BACKBOARD == u8BoardType))
     {
         return TRUE;
     }

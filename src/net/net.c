@@ -400,7 +400,7 @@ wvErrCode Net_GetIpAddrWithDHCP(const char * eth_name)
     }
 
 	char cmd[128] = {0};
-	snprintf(cmd, sizeof(cmd), "udhcpc -i %s", eth_name);
+	snprintf(cmd, sizeof(cmd), "udhcpc -b - R -i %s", eth_name);
 	system(cmd);
 
 	return WV_SUCCESS;

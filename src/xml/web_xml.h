@@ -155,7 +155,7 @@ wvErrCode WebXml_GetParamsInfoFromTunerParams(void);
 wvErrCode WebXml_SetProgramInfoToTSInfo(TSInfo * pstTS);
 wvErrCode WebXml_SetParamsInfoToTunerParams(void);
 
-
+wvErrCode WebXml_InitAll(void);
 
 ParamsInfoPtr  WebXml_GetParamsInfoPtr(U8 u8Index);
 

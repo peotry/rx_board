@@ -80,6 +80,10 @@ wvErrCode upgrade_CheckUpgrade(const U8 * UpgradeFileName)
        (WV_BOARD_TYPE != stUpgradeHeader.BoardType) ||
        (WV_MACHINE_TYPE != stUpgradeHeader.MachineType))
     {
+		printf("SyncFlag = %d\n", stUpgradeHeader.SyncFlag);
+		printf("BoardType = %d\n", stUpgradeHeader.BoardType);
+		printf("MachineType = %d\n", stUpgradeHeader.MachineType);
+		
         LOG_PRINTF(LOG_LEVEL_ERROR, LOG_MODULE_SYS, "Upgrade file [%s] header info error!\n", UpgradeFileName);
         enRet =  WV_ERR_UPGRADE_CHECK_HEADER;
         goto close_upgradefile; 

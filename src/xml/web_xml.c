@@ -5,6 +5,7 @@
 #include "log/wv_log.h"
 #include "WV_CI.h"
 #include "tuner_c.h"
+#include "thread/thread.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -75,6 +76,21 @@ ReplyCmdMapFunc reply_cmd_map_func[] =
 
 
 
+/*
+* function: WebXml_GetIpPortFromStr
+*
+* description:  从[ip:port] 格式的字符串中获取ip 和 port
+*
+* input:  @str: [ip:port] 格式字符串
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 wvErrCode WebXml_GetIpPortFromStr(const char *str, U32 *pu32Ip, U16 * pu16Port)
 {
 	if(!str)
@@ -110,6 +126,21 @@ wvErrCode WebXml_GetIpPortFromStr(const char *str, U32 *pu32Ip, U16 * pu16Port)
 }
 
 
+/*
+* function: WebXml_SetIpPortToStr
+*
+* description: 将ip 和 port 转换为 [ip:port]格式的字符串
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 wvErrCode WebXml_SetIpPortToStr(const U32 u32Ip, const U16 u16Port, char *str, int str_len)
 {
 	if(!str)
@@ -143,6 +174,21 @@ wvErrCode WebXml_SetIpPortToStr(const U32 u32Ip, const U16 u16Port, char *str, i
 }
 
 
+/*
+* function: WebXml_XmlParams2StructParams
+*
+* description: 将XML结构体转换为数值结构体
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 static void WebXml_XmlParams2StructParams(void)
 {
 	U32 i = 0;
@@ -195,6 +241,21 @@ static void WebXml_XmlParams2StructParams(void)
 }
 
 
+/*
+* function: WebXml_XmlProgram2StructProgram
+*
+* description: 将xml结构体转换为数值结构体
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 static void WebXml_XmlProgram2StructProgram(void)
 {
 	U32 i = 0;
@@ -226,6 +287,21 @@ static void WebXml_XmlProgram2StructProgram(void)
 }
 
 
+/*
+* function: WebXml_StructProgram2XmlProgram
+*
+* description: 将数值结构体转换为xml结构体
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 static void WebXml_StructProgram2XmlProgram(void)
 {
 	U32 i = 0;
@@ -263,6 +339,21 @@ static void WebXml_StructProgram2XmlProgram(void)
 }
 
 
+/*
+* function: WebXml_StructParamsXmlParams
+*
+* description: 将数值结构体转换为xml结构体
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 static void WebXml_StructParams2XmlParams(void)
 {
 	//TODO
@@ -293,11 +384,24 @@ static void WebXml_StructParams2XmlParams(void)
 		WebXml_SetIpPortToStr(s_arrstParamsInfo[i].u32MonitorIpAddr, s_arrstParamsInfo[i].u16MonitorPort, s_arrstXmlParamsInfo[i].monitor_addr.value, STRING_MAX_LEN);
 		snprintf(s_arrstXmlParamsInfo[i].monitor_switch.value, STRING_MAX_LEN, "%u", s_arrstParamsInfo[i].u32MonitorSwitch);
 	}
-	
-	
 }
 
 
+/*
+* function: WebXml_InitDeviceInfo
+*
+* description: 初始化设备信息
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 wvErrCode WebXml_InitDeviceInfo(void)
 {
 	LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_XML, "Init DeviceInfo...");
@@ -312,8 +416,8 @@ wvErrCode WebXml_InitDeviceInfo(void)
 	Net_GetIpAddrStr(eth_name, aru8IPAddr, sizeof(aru8IPAddr));
 	Net_GetLocalNetMask(eth_name, aru8NetMask, sizeof(aru8NetMask));
 	Net_GetGateWay(aru8Gateway, sizeof(aru8Gateway));
-	snprintf(aru8AppVer, "V%u", SW_VER);
-	snprintf(aru8FPGAVer, "V%u", FPGA_GetLogicVersion());
+	snprintf(aru8AppVer, sizeof(aru8AppVer), "V%u", SW_VER);
+	snprintf(aru8FPGAVer, sizeof(aru8FPGAVer), "V%u", FPGA_GetLogicVersion());
 	
 	strncpy(s_stXmlDeviceInfo.oem, "wellav", STRING_MAX_LEN);
 	strncpy(s_stXmlDeviceInfo.card_type, "0", STRING_MAX_LEN);
@@ -335,12 +439,28 @@ wvErrCode WebXml_InitDeviceInfo(void)
 	
 }
 
+
 XmlDeviceInfoPtr WebXml_GetXmlDeviceInfoPtr(void)
 {
 	return (XmlDeviceInfoPtr)(&s_stXmlDeviceInfo);
 }
 
 
+/*
+* function: WebXml_InitParamsInfo
+*
+* description: 初始化参数信息
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 wvErrCode WebXml_InitParamsInfo(void)
 {
 	printf("WebXml_InitParamsInfo ...\n");
@@ -417,6 +537,21 @@ XmlParamsInfoPtr WebXml_GetXmlParamsInfoPtr(void)
 }
 
 
+/*
+* function: WebXml_InitProgramDecrypt
+*
+* description: 
+*
+* input:  @
+*
+* output: @
+*
+* return@ 
+* success: 
+*    fail: 
+*
+* author: linsheng.pan
+*/
 wvErrCode WebXml_InitProgramDecrypt(void)
 {
 	
@@ -760,6 +895,14 @@ wvErrCode WebXml_Update(xmlDocPtr xml_doc_ptr, char *status, char *comment)
 }
 
 
+static void * WebXml_SystemRestart(void *arg)
+{
+	sleep(3);
+	system("reboot");
+
+	return NULL;
+}
+
 wvErrCode WebXml_Restart(xmlDocPtr xml_doc_ptr, char *status, char *comment)
 {
 	if(!xml_doc_ptr)
@@ -774,6 +917,8 @@ wvErrCode WebXml_Restart(xmlDocPtr xml_doc_ptr, char *status, char *comment)
 	//执行相应的指令
 	//2.重启后回复执行结果。
 	//3.板卡重启必须在1分钟之内完成。
+
+	THREAD_NEW_DETACH(WebXml_SystemRestart, NULL, "WebXml_SystemRestart");
 
 	strcpy(status, STATUS_SUCCCESS);
 	strcpy(comment, "\0");
@@ -795,6 +940,8 @@ wvErrCode WebXml_Factory(xmlDocPtr xml_doc_ptr, char *status, char *comment)
 
 	//TODO
 	//执行相应打指令
+	PARAM_Default();
+	WebXml_InitAll();
 
 	strcpy(status, STATUS_SUCCCESS);
 	strcpy(comment, "\0");
@@ -1566,6 +1713,16 @@ ProgramDecryptPtr  WebXml_GetProgramDecryptPtr(U8 u8Index)
 	}
 
 	return (ProgramDecryptPtr)(&s_arrstProgramDecrypt[u8Index]);
+}
+
+
+wvErrCode WebXml_InitAll(void)
+{
+	WebXml_InitDeviceInfo();
+	WebXml_InitParamsInfo();
+	WebXml_InitProgramDecrypt();
+
+	return WV_SUCCESS;
 }
 
 

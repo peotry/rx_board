@@ -2175,7 +2175,9 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16InProgIndex, TSInfo *pstParamTS, U8 eMo
                                             u16InProgIndex, 
                                             eMode, 
                                             nRet);
-	
+
+
+	#if 0
 	printf("###### CAPMT ##########\n");
 
 	for(i = 0; i < nTotalLen; ++i)
@@ -2188,6 +2190,7 @@ int WVCI_GenerateCAPMT(U8 u8Slot, U16 u16InProgIndex, TSInfo *pstParamTS, U8 eMo
 	}
 
 	printf("\n###### CAPMT End ##########\n");
+	#endif
 	
 											
     return WVCI_SUCCESS;
@@ -2240,7 +2243,7 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
 {
     wvErrCode enErrCode = WV_SUCCESS; 
     U16 i = 0;
-    U8 u8Slot = 0;
+    U8 u8Slot = emSlotMode;
     TSInfo *pstParamTS = NULL;
     IndexInfoList arstDescrambledProgIndexList[WVCI_MAX_SLOT_NUM];
     U16 u16InTSIndex = INDEX_INVALID_VALUE;
@@ -2295,6 +2298,7 @@ int WVCI_UpdateSetting(WVCI_SLOTMODE_t emSlotMode)
 	{
 		LOG_PRINTF(LOG_LEVEL_DEBUG, LOG_MODULE_CI, "Slot[%u] Not Decrypt..", u8Slot);
 		WVCI_ClearTSBypass2CAM(u8Slot);
+		//return WV_SUCCESS;
 	}
 
 	
